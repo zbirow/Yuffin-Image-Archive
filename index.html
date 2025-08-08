@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuffin Gallery Viewer (v3.3 - Sorted)</title>
+    <!-- Cały CSS bez zmian -->
+    <style>
+        :root {
+            --bg-color: #282c34; --text-color: #abb2bf; --border-color: #444;
+            --accent-color: #61afef; --accent-hover: #528baf; --placeholder-bg: #3a3f4b;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; text-align: center; }
+        .top-bar { display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        label.button { background-color: var(--accent-color); color: var(--bg-color); padding: 12px 25px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        input[type="file"] { display: none; }
+        #filter-container select {
+            background-color: #4b5263; color: white; border: 1px solid #666; padding: 12px;
+            border-radius: 5px; font-size: 16px;
+        }
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; min-height: 50vh; }
+        .gallery-item { width: 100%; padding-top: 75%; background-color: var(--placeholder-bg); border-radius: 4px; position: relative; overflow: hidden; }
+        .gallery-item img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; cursor: pointer; opacity: 0; transition: opacity 0.4s; }
+        .gallery-item img.loaded { opacity: 1; }
+        #status { font-size: 18px; min-height: 25px; }
+        #pagination { margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
+        #pagination button, #pagination input { background: #4b5263; color: white; border: 1px solid #666; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        #pagination button:disabled { background: #3a3f4b; cursor: not-allowed; }
+        #pagination input[type="number"] { width: 60px; text-align: center; -moz-appearance: textfield; }
+        #pagination input::-webkit-outer-spin-button, #pagination input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #pagination .page-info { padding: 0 10px; }
+        #lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        #lightbox.visible { opacity: 1; visibility: visible; }
+        #lightbox img { max-width: 90vw; max-height: 90vh; }
+        #close-button { position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- Cały HTML bez zmian -->
+    <div class="container">
+        <h1>Galeria .yuf z Filtrowaniem</h1>
+        <div class="top-bar">
+            <label for="fileInput" class="button">Wybierz plik .yuf</label>
+            <input type="file" id="fileInput" accept=".yuf">
+            <div id="filter-container" style="display: none;">
+                <select id="dir-filter"></select>
+            </div>
+        </div>
+        <p id="status">Wybierz plik, aby rozpocząć.</p>
+        <div id="gallery"></div>
+        <div id="pagination"></div>
+    </div>
+    <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Powiększony obraz"></div>
+
+    <script>
+        const MAGIC_HEADER_STR = 'Yuffin';
+        // ... (reszta stałych i referencji DOM bez zmian)
+        const fileInput = document.getElementById('fileInput');
+        const gallery = document.getElementById('gallery');
+        const statusEl = document.getElementById('status');
+        const paginationContainer = document.getElementById('pagination');
+        const filterContainer = document.getElementById('filter-container');
+        const dirFilter = document.getElementById('dir-filter');
+        const lightbox = document.getElementById('lightbox');
+        const closeButton = document.getElementById('close-button');
+        const lightboxImage = document.getElementById('lightbox-image');
+
+        let yufFileHandle = null;
+        let allImages = [];
+        let filteredImages = [];
+        let directories = [];
+        const IMAGES_PER_PAGE = 36;
+        let currentPage = 1;
+
+        // handleFileSelect i inne funkcje pozostają takie same
+
+        // --- ZMODYFIKOWANA FUNKCJA `populateFilter` ---
+        function populateFilter() {
+            // Krok 1: Wyczyść filtr i dodaj statyczną opcję "Wszystkie"
+            dirFilter.innerHTML = '<option value="-1">Wszystkie Katalogi</option>';
+
+            // Krok 2: Stwórz tymczasową tablicę obiektów, aby ułatwić sortowanie
+            const sortableDirs = directories.map((name, id) => ({
+                id: id,
+                name: (name === '' || name === '.') ? '[Główny Katalog]' : name,
+                isRoot: (name === '' || name === '.')
+            }));
+            
+            // Krok 3: Posortuj tablicę według własnych reguł
+            sortableDirs.sort((a, b) => {
+                if (a.isRoot) return -1; // Główny katalog zawsze na górze
+                if (b.isRoot) return 1;  // Główny katalog zawsze na górze
+                return a.name.localeCompare(b.name); // Resztę sortuj alfabetycznie
+            });
+
+            // Krok 4: Wypełnij listę rozwijaną posortowanymi danymi
+            sortableDirs.forEach(dir => {
+                const option = document.createElement('option');
+                option.value = dir.id;
+                option.textContent = dir.name;
+                dirFilter.appendChild(option);
+            });
+            
+            filterContainer.style.display = 'block';
+        }
+
+        // --- CAŁA RESZTA KODU JAVASCRIPT POZOSTAJE BEZ ZMIAN ---
+        // Poniżej znajduje się reszta kodu, która jest już poprawna.
+        
+        function cleanup() {
+            gallery.innerHTML = '';
+            paginationContainer.innerHTML = '';
+            filterContainer.style.display = 'none';
+            yufFileHandle = null;
+            allImages = [];
+            filteredImages = [];
+            directories = [];
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            cleanup();
+            yufFileHandle = file;
+            statusEl.textContent = 'Analizowanie pliku...';
+
+            try {
+                const headerSize = 38;
+                const headerBuffer = await yufFileHandle.slice(0, headerSize).arrayBuffer();
+                const headerView = new DataView(headerBuffer);
+                const decoder = new TextDecoder('utf-8');
+
+                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("To nie jest prawidłowy plik Yuffin.");
+                
+                const version = headerView.getFloat32(6, true);
+                if (Math.floor(version) < 3) {
+                    throw new Error(`Nieobsługiwana wersja pliku: ${version.toFixed(1)}. Wymagana jest wersja 3.x.`);
+                }
+                
+                const imageCount = Number(headerView.getBigUint64(10, true));
+                const dirCount = headerView.getUint32(18, true);
+                const dirTableOffset = Number(headerView.getBigUint64(22, true));
+                const fileIndexOffset = Number(headerView.getBigUint64(30, true));
+                
+                const dirTableBlob = yufFileHandle.slice(dirTableOffset, fileIndexOffset);
+                const dirTableText = await dirTableBlob.text();
+                
+                directories = dirTableText.split('\0').slice(0, dirCount);
+                
+                const fileIndexEntrySize = 8;
+                const fileIndexSize = imageCount * fileIndexEntrySize;
+                const fileIndexBuffer = await yufFileHandle.slice(fileIndexOffset, fileIndexOffset + fileIndexSize).arrayBuffer();
+                const fileIndexView = new DataView(fileIndexBuffer);
+                
+                allImages = [];
+                for (let i = 0; i < imageCount; i++) {
+                    const entryOffset = i * fileIndexEntrySize;
+                    const offset = fileIndexView.getUint32(entryOffset, true);
+                    const dirId = fileIndexView.getUint16(entryOffset + 4, true);
+                    allImages.push({ offset, dirId });
+                }
+                
+                populateFilter();
+                applyFilter();
+
+            } catch (error) {
+                alert(error.message);
+                statusEl.textContent = 'Błąd! Wybierz prawidłowy plik.';
+                cleanup();
+            }
+        }
+
+        function applyFilter() {
+            const selectedDirId = parseInt(dirFilter.value, 10);
+            filteredImages = (selectedDirId === -1) 
+                ? allImages 
+                : allImages.filter(img => img.dirId === selectedDirId);
+            const totalImages = filteredImages.length;
+            const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE) || 1;
+            statusEl.textContent = `Znaleziono ${totalImages} obrazów na ${totalPages} stronach.`;
+            setupPaginationControls(totalPages);
+            renderPage(1);
+        }
+
+        async function renderPage(pageNumber) {
+            const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
+            if (pageNumber < 1 || pageNumber > totalPages) return;
+            currentPage = pageNumber;
+            gallery.innerHTML = '';
+            updatePaginationControls(totalPages);
+            const startIndex = (pageNumber - 1) * IMAGES_PER_PAGE;
+            const endIndex = Math.min(startIndex + IMAGES_PER_PAGE, filteredImages.length);
+            for (let i = startIndex; i < endIndex; i++) {
+                const imageInfo = filteredImages[i];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'gallery-item';
+                const img = document.createElement('img');
+                itemDiv.appendChild(img);
+                gallery.appendChild(itemDiv);
+                loadImage(imageInfo.offset, img);
+            }
+        }
+        
+        async function loadImage(offset, imgElement) {
+            const blockHeaderBuffer = await yufFileHandle.slice(offset, offset + 8).arrayBuffer();
+            const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
+            const imageBlob = yufFileHandle.slice(offset + 8, offset + 8 + imageSize);
+            const url = URL.createObjectURL(imageBlob);
+            imgElement.src = url;
+            imgElement.classList.add('loaded');
+            imgElement.addEventListener('click', () => openLightbox(offset));
+            imgElement.onload = () => URL.revokeObjectURL(url);
+        }
+        
+        function setupPaginationControls(totalPages) {
+            paginationContainer.innerHTML = '';
+            if (totalPages <= 1) return;
+            paginationContainer.innerHTML = `<button id="first-btn">« Pierwsza</button><button id="prev-btn">‹ Poprzednia</button><span class="page-info">Strona <input type="number" id="page-input" min="1"> / ${totalPages}</span><button id="go-btn">Idź</button><button id="next-btn">Następna ›</button><button id="last-btn">Ostatnia »</button>`;
+            document.getElementById('first-btn').onclick = () => renderPage(1);
+            document.getElementById('prev-btn').onclick = () => renderPage(currentPage - 1);
+            document.getElementById('next-btn').onclick = () => renderPage(currentPage + 1);
+            document.getElementById('last-btn').onclick = () => renderPage(totalPages);
+            const pageInput = document.getElementById('page-input');
+            const goBtn = document.getElementById('go-btn');
+            goBtn.onclick = () => { const page = parseInt(pageInput.value, 10); if (page >= 1 && page <= totalPages) renderPage(page); };
+            pageInput.addEventListener('keydown', e => e.key === 'Enter' && goBtn.click());
+        }
+
+        function updatePaginationControls(totalPages) {
+            if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
+            document.getElementById('first-btn').disabled = currentPage === 1;
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = currentPage === totalPages;
+            document.getElementById('last-btn').disabled = currentPage === totalPages;
+            document.getElementById('page-input').value = currentPage;
+            document.getElementById('page-input').max = totalPages;
+        }
+        
+        async function openLightbox(offset) {
+            const blockHeaderBuffer = await yufFileHandle.slice(offset, offset + 8).arrayBuffer();
+            const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
+            const imageBlob = yufFileHandle.slice(offset + 8, offset + 8 + imageSize);
+            const url = URL.createObjectURL(imageBlob);
+            lightboxImage.src = url;
+            lightboxImage.onload = () => URL.revokeObjectURL(url);
+            lightbox.classList.add('visible');
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('visible');
+            lightboxImage.src = ""; 
+        }
+
+        dirFilter.addEventListener('change', applyFilter);
+        fileInput.addEventListener('change', handleFileSelect);
+        closeButton.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => (e.target === lightbox) && closeLightbox());
+
+    </script>
+</body>
+</html>
