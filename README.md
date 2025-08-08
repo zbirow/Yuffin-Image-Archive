@@ -4,11 +4,12 @@
 
 This project provides a complete toolkit for efficiently storing and browsing large numbers of images. It uses a custom, highly-optimized binary format (`.yuf`) to pack entire directory structures into a single, portable file.
 
-![Screenshot of the GUI Packer]([LINK DO ZRZUTU EKRANU GUI])
 _The cross-platform GUI Packer tool._
 
-![Screenshot of the Web Viewer]([LINK DO ZRZUTU EKRANU GALERII])
+![](https://github.com/zbirow/Yuffin-Archive/blob/main/scs1.png)
+
 _The feature-rich, serverless Web Viewer._
+![](https://github.com/zbirow/Yuffin-Archive/blob/main/scs2.png)
 
 ## ✨ Core Features
 
