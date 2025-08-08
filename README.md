@@ -14,7 +14,7 @@ _The feature-rich, serverless Web Viewer._
 ## ✨ Core Features
 
 *   **Highly Optimized Binary Format:** The custom `.yuf` format is designed for minimal size and extremely fast, on-demand data access.
-*   **Directory Structure Preservation:** Archives maintain the original folder hierarchy, allowing for organized collections.
+*   **Directory Structure Preservation:** Archives maintain the original folder hierarchy, allowing for organized collections.(File names are not preserved. After unpacking, they take the form: image_*)
 *   **Large File Support:** Optimized to handle large archives (up to 4GB) without loading the entire file into memory.
 *   **Cross-Platform GUI Packer:** An easy-to-use tool built with Python and Tkinter to pack and unpack archives. It runs on Windows, macOS, and Linux.
 *   **Serverless Web Viewer:** A single, self-contained HTML file that can open and browse `.yuf` archives directly in your web browser. No backend or server required!
