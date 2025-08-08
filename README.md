@@ -54,7 +54,7 @@ _The feature-rich, serverless [Web Viewer](https://zbirow.github.io/Yuffin-Archi
 3.  Select your `.yuf` archive file from your computer.
 4.  The gallery will load instantly. Use the filter and pagination controls to browse your collection.
 
-## ⚙️ The `.yuf` File Format (v3.1)
+## ⚙️ The `.yuf` File Format
 
 The file format is designed for efficiency and random access.
 
