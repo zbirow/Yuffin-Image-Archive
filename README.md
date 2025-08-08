@@ -49,7 +49,7 @@ _The feature-rich, serverless Web Viewer._
 ### Viewing an Archive
 
 1.  Open the `index.html` file in any modern web browser (Chrome, Firefox, Edge, Safari).
-2.  Click the "Wybierz plik .yuf" button.
+2.  Click the "Select .yuf File" button.
 3.  Select your `.yuf` archive file from your computer.
 4.  The gallery will load instantly. Use the filter and pagination controls to browse your collection.
 
