@@ -8,7 +8,7 @@ _The cross-platform GUI Packer tool._
 
 ![](https://github.com/zbirow/Yuffin-Archive/blob/main/scs1.png)
 
-_The feature-rich, serverless Web Viewer._
+_The feature-rich, serverless [Web Viewer](https://zbirow.github.io/Yuffin-Archive/)._
 ![](https://github.com/zbirow/Yuffin-Archive/blob/main/scs2.png)
 
 ## ✨ Core Features
