@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yuffin Gallery Viewer (v3.3 - Sorted)</title>
-    <!-- Cały CSS bez zmian -->
+    <!-- CSS styles remain the same -->
     <style>
         :root {
             --bg-color: #282c34; --text-color: #abb2bf; --border-color: #444;
@@ -37,25 +37,23 @@
     </style>
 </head>
 <body>
-    <!-- Cały HTML bez zmian -->
     <div class="container">
-        <h1>Galeria .yuf z Filtrowaniem</h1>
+        <h1>Yuffin File Gallery</h1>
         <div class="top-bar">
-            <label for="fileInput" class="button">Wybierz plik .yuf</label>
+            <label for="fileInput" class="button">Select .yuf File</label>
             <input type="file" id="fileInput" accept=".yuf">
             <div id="filter-container" style="display: none;">
                 <select id="dir-filter"></select>
             </div>
         </div>
-        <p id="status">Wybierz plik, aby rozpocząć.</p>
+        <p id="status">Select a file to begin.</p>
         <div id="gallery"></div>
         <div id="pagination"></div>
     </div>
-    <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Powiększony obraz"></div>
+    <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Enlarged image"></div>
 
     <script>
         const MAGIC_HEADER_STR = 'Yuffin';
-        // ... (reszta stałych i referencji DOM bez zmian)
         const fileInput = document.getElementById('fileInput');
         const gallery = document.getElementById('gallery');
         const statusEl = document.getElementById('status');
@@ -73,28 +71,25 @@
         const IMAGES_PER_PAGE = 36;
         let currentPage = 1;
 
-        // handleFileSelect i inne funkcje pozostają takie same
-
-        // --- ZMODYFIKOWANA FUNKCJA `populateFilter` ---
         function populateFilter() {
-            // Krok 1: Wyczyść filtr i dodaj statyczną opcję "Wszystkie"
-            dirFilter.innerHTML = '<option value="-1">Wszystkie Katalogi</option>';
+            // Step 1: Clear the filter and add the static "All" option
+            dirFilter.innerHTML = '<option value="-1">All Directories</option>';
 
-            // Krok 2: Stwórz tymczasową tablicę obiektów, aby ułatwić sortowanie
+            // Step 2: Create a temporary array of objects to facilitate sorting
             const sortableDirs = directories.map((name, id) => ({
                 id: id,
-                name: (name === '' || name === '.') ? '[Główny Katalog]' : name,
+                name: (name === '' || name === '.') ? '[Root Directory]' : name,
                 isRoot: (name === '' || name === '.')
             }));
             
-            // Krok 3: Posortuj tablicę według własnych reguł
+            // Step 3: Sort the array using custom rules
             sortableDirs.sort((a, b) => {
-                if (a.isRoot) return -1; // Główny katalog zawsze na górze
-                if (b.isRoot) return 1;  // Główny katalog zawsze na górze
-                return a.name.localeCompare(b.name); // Resztę sortuj alfabetycznie
+                if (a.isRoot) return -1; // Root directory always on top
+                if (b.isRoot) return 1;  // Root directory always on top
+                return a.name.localeCompare(b.name); // Sort the rest alphabetically
             });
 
-            // Krok 4: Wypełnij listę rozwijaną posortowanymi danymi
+            // Step 4: Populate the dropdown with the sorted data
             sortableDirs.forEach(dir => {
                 const option = document.createElement('option');
                 option.value = dir.id;
@@ -105,9 +100,6 @@
             filterContainer.style.display = 'block';
         }
 
-        // --- CAŁA RESZTA KODU JAVASCRIPT POZOSTAJE BEZ ZMIAN ---
-        // Poniżej znajduje się reszta kodu, która jest już poprawna.
-        
         function cleanup() {
             gallery.innerHTML = '';
             paginationContainer.innerHTML = '';
@@ -124,7 +116,7 @@
 
             cleanup();
             yufFileHandle = file;
-            statusEl.textContent = 'Analizowanie pliku...';
+            statusEl.textContent = 'Analyzing file...';
 
             try {
                 const headerSize = 38;
@@ -132,11 +124,11 @@
                 const headerView = new DataView(headerBuffer);
                 const decoder = new TextDecoder('utf-8');
 
-                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("To nie jest prawidłowy plik Yuffin.");
+                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("This is not a valid Yuffin file.");
                 
                 const version = headerView.getFloat32(6, true);
                 if (Math.floor(version) < 3) {
-                    throw new Error(`Nieobsługiwana wersja pliku: ${version.toFixed(1)}. Wymagana jest wersja 3.x.`);
+                    throw new Error(`Unsupported file version: ${version.toFixed(1)}. Version 3.x is required.`);
                 }
                 
                 const imageCount = Number(headerView.getBigUint64(10, true));
@@ -167,7 +159,7 @@
 
             } catch (error) {
                 alert(error.message);
-                statusEl.textContent = 'Błąd! Wybierz prawidłowy plik.';
+                statusEl.textContent = 'Error! Please select a valid file.';
                 cleanup();
             }
         }
@@ -179,7 +171,7 @@
                 : allImages.filter(img => img.dirId === selectedDirId);
             const totalImages = filteredImages.length;
             const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE) || 1;
-            statusEl.textContent = `Znaleziono ${totalImages} obrazów na ${totalPages} stronach.`;
+            statusEl.textContent = `Found ${totalImages} images on ${totalPages} pages.`;
             setupPaginationControls(totalPages);
             renderPage(1);
         }
@@ -217,7 +209,7 @@
         function setupPaginationControls(totalPages) {
             paginationContainer.innerHTML = '';
             if (totalPages <= 1) return;
-            paginationContainer.innerHTML = `<button id="first-btn">« Pierwsza</button><button id="prev-btn">‹ Poprzednia</button><span class="page-info">Strona <input type="number" id="page-input" min="1"> / ${totalPages}</span><button id="go-btn">Idź</button><button id="next-btn">Następna ›</button><button id="last-btn">Ostatnia »</button>`;
+            paginationContainer.innerHTML = `<button id="first-btn">« First</button><button id="prev-btn">‹ Previous</button><span class="page-info">Page <input type="number" id="page-input" min="1"> / ${totalPages}</span><button id="go-btn">Go</button><button id="next-btn">Next ›</button><button id="last-btn">Last »</button>`;
             document.getElementById('first-btn').onclick = () => renderPage(1);
             document.getElementById('prev-btn').onclick = () => renderPage(currentPage - 1);
             document.getElementById('next-btn').onclick = () => renderPage(currentPage + 1);
