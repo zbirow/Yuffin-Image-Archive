@@ -25,10 +25,10 @@ _The feature-rich, serverless Web Viewer._
 
 ## 🛠️ Components
 
-1.  **The Packer (`yuffin_packer.pyw`)**
+1.  **The Packer (`Yuffin-Archive.py`)**
     A Python application with a graphical user interface for creating (`.yuf`) archives from a folder of images and for unpacking them back into their original directory structure.
 
-2.  **The Viewer (`yuffin_gallery_v3.html`)**
+2.  **The Viewer (`index.html`)**
     A powerful, client-side web application written in pure JavaScript. It can open a local `.yuf` file, parse its structure, and display an interactive, filterable, and paginated gallery.
 
 ## 🚀 How to Use
@@ -36,7 +36,7 @@ _The feature-rich, serverless Web Viewer._
 ### Packing & Unpacking Images
 
 1.  Make sure you have Python installed on your system.
-2.  Run the `yuffin_packer.pyw` file (on Windows, this will launch the app without a console window).
+2.  Run the `Yuffin-Archive.py` file.
 3.  **To Pack:**
     *   Click "Browse..." to select your source folder containing images.
     *   Click "Save As..." to choose a location and name for your `.yuf` archive.
@@ -48,7 +48,7 @@ _The feature-rich, serverless Web Viewer._
 
 ### Viewing an Archive
 
-1.  Open the `yuffin_gallery_v3.html` file in any modern web browser (Chrome, Firefox, Edge, Safari).
+1.  Open the `index.html` file in any modern web browser (Chrome, Firefox, Edge, Safari).
 2.  Click the "Wybierz plik .yuf" button.
 3.  Select your `.yuf` archive file from your computer.
 4.  The gallery will load instantly. Use the filter and pagination controls to browse your collection.
