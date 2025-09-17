@@ -4,6 +4,7 @@ import struct
 import os
 from pathlib import Path
 import threading
+import re
 
 # --- File Format Constants (v3.1 - Corrected) ---
 MAGIC_HEADER = b'Yuffin'
@@ -17,6 +18,14 @@ HEADER_FORMAT_V3 = '<6sfQIQQ'
 BLOCK_PREFIX_FORMAT = '<4sI'
 FILE_INDEX_ENTRY_FORMAT_V3 = '<IH2s'
 
+# --- Natural Sorting Function ---
+def natural_sort_key(s):
+    """
+    Klucz sortowania naturalnego - sortuje liczby numerycznie, a nie leksykograficznie
+    """
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(r'(\d+)', str(s))]
+
 # --- Core Logic Functions (v3.1) ---
 
 def pack_images_v3(source_dir, output_file, log_callback):
@@ -24,7 +33,10 @@ def pack_images_v3(source_dir, output_file, log_callback):
     try:
         source_path = Path(source_dir).resolve()
         log_callback("Scanning for files and directories...")
-        image_files = sorted([p for p in source_path.rglob('*') if p.is_file()])
+        
+        # Znajdź wszystkie pliki i posortuj je naturalnie
+        image_files = [p for p in source_path.rglob('*') if p.is_file()]
+        image_files = sorted(image_files, key=lambda x: natural_sort_key(x.relative_to(source_path)))
         
         if not image_files:
             log_callback(f"No image files found in '{source_dir}'.")
