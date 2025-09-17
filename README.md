@@ -23,6 +23,33 @@ _The feature-rich, serverless [Web Viewer](https://zbirow.github.io/Yuffin-Archi
     *   **Directory Filtering:** Instantly filter the gallery by the original folder structure.
     *   **Full Pagination:** Complete navigation controls, including "First," "Last," "Next," "Previous," and a "Go to page" input.
     *   **Lightbox:** Click any thumbnail to view a full-sized version of the image.
+    *   **Comic Book View:**
+        *   Seamless reading experience with continuous vertical flow
+        *   Smart chapter detection and navigation (supports fractional chapters like 65.5, 90.1, etc.)
+        *   Chapter navigation buttons at both top and bottom of the page
+        *   Automatic scrolling to top when changing chapters
+        *   No gaps between images for authentic comic book reading
+        *   Perfect for comics, manga, and other sequential art
+
+
+## 📁 Directory Naming for Comic View
+ For optimal compatibility with the comic book view feature, please use the following naming pattern for directories containing chapters:
+
+**Standard format:** chapter_X where X is the chapter number
+
+**Examples:** chapter_1, chapter_2, chapter_15
+
+**Fractional chapters supported:** chapter_65.5, chapter_90.1, chapter_90.2
+
+The viewer will automatically:
+
+ * Detect and sort chapters numerically
+
+ * Handle fractional chapter numbers correctly
+
+ * Provide seamless navigation between chapters in comic book view
+
+
 
 ## 🛠️ Components
 
