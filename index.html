@@ -55,6 +55,72 @@
             object-fit: contain; /* Upewnij się, że cały obraz jest widoczny */
         }
 
+        /* Nawigacja rozdziałów w widoku komiksowym */
+        #chapter-navigation {
+            display: none;
+            margin: 20px 0;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        #chapter-navigation button {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        #chapter-navigation button:hover {
+            background-color: var(--accent-hover);
+        }
+        #chapter-navigation button:disabled {
+            background-color: #4b5263;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        #current-chapter {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 0 15px;
+        }
+        #chapter-navigation-bottom {
+    display: none;
+    margin: 20px 0;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+#chapter-navigation-bottom button {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+#chapter-navigation-bottom button:hover {
+    background-color: var(--accent-hover);
+}
+
+#chapter-navigation-bottom button:disabled {
+    background-color: #4b5263;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+#current-chapter-bottom {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0 15px;
+}
+
         #status { font-size: 18px; min-height: 25px; }
         #pagination { margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
         #pagination button, #pagination input { background: #4b5263; color: white; border: 1px solid #666; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
@@ -86,9 +152,19 @@
                 <span>Widok Komiksowy</span>
             </div>
         </div>
+        <div id="chapter-navigation">
+            <button id="prev-chapter">Poprzedni rozdział</button>
+            <span id="current-chapter"></span>
+            <button id="next-chapter">Następny rozdział</button>
+        </div>
         <p id="status">Wybierz plik, aby rozpocząć.</p>
         <div id="gallery"></div>
         <div id="pagination"></div>
+        <div id="chapter-navigation-bottom" style="display: none; margin: 20px 0; gap: 15px;">
+    <button id="prev-chapter-bottom">Poprzedni rozdział</button>
+    <span id="current-chapter-bottom"></span>
+    <button id="next-chapter-bottom">Następny rozdział</button>
+</div>
     </div>
     <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Powiększony obraz"></div>
 
@@ -105,32 +181,72 @@
         const lightbox = document.getElementById('lightbox');
         const closeButton = document.getElementById('close-button');
         const lightboxImage = document.getElementById('lightbox-image');
+        const chapterNavigation = document.getElementById('chapter-navigation');
+        const prevChapterBtn = document.getElementById('prev-chapter');
+        const nextChapterBtn = document.getElementById('next-chapter');
+        const currentChapterEl = document.getElementById('current-chapter');
+        const chapterNavigationBottom = document.getElementById('chapter-navigation-bottom');
+        const prevChapterBottomBtn = document.getElementById('prev-chapter-bottom');
+        const nextChapterBottomBtn = document.getElementById('next-chapter-bottom');
+        const currentChapterBottomEl = document.getElementById('current-chapter-bottom');
 
         let yufFileHandle = null;
         let allImages = [];
         let filteredImages = [];
         let directories = [];
+        let sortedChapterDirs = []; // Posortowane katalogi rozdziałów
+        let currentChapterIndex = 0; // Aktualny indeks rozdziału w widoku komiksowym
         const IMAGES_PER_PAGE = 36;
         let currentPage = 1;
 
+        // Funkcja do sortowania katalogów z numerami rozdziałów (w tym ułamkowych)
+        function sortChapterDirectories(dirs) {
+            // Filtrujemy tylko katalogi, które wyglądają jak rozdziały (chapter_xxx)
+            const chapterDirs = dirs.filter(dir => dir.startsWith('chapter_'));
+            
+            // Mapujemy do obiektów z wyodrębnionym numerem rozdziału
+            const dirsWithNumbers = chapterDirs.map(dir => {
+                const chapterNum = parseFloat(dir.replace('chapter_', ''));
+                return {
+                    original: dir,
+                    numericValue: isNaN(chapterNum) ? 0 : chapterNum
+                };
+            });
+            
+            // Sortujemy po wartości numerycznej
+            dirsWithNumbers.sort((a, b) => a.numericValue - b.numericValue);
+            
+            // Zwracamy posortowane oryginalne nazwy
+            return dirsWithNumbers.map(dir => dir.original);
+        }
+
         function populateFilter() {
             dirFilter.innerHTML = '<option value="-1">Wszystkie katalogi</option>';
-            const sortableDirs = directories.map((name, id) => ({
-                id: id,
-                name: (name === '' || name === '.') ? '[Główny katalog]' : name,
-                isRoot: (name === '' || name === '.')
-            }));
-            sortableDirs.sort((a, b) => {
-                if (a.isRoot) return -1;
-                if (b.isRoot) return 1;
-                return a.name.localeCompare(b.name);
+            
+            // Sortujemy katalogi rozdziałów
+            sortedChapterDirs = sortChapterDirectories(directories);
+            
+            // Dodajemy katalogi rozdziałów w posortowanej kolejności
+            sortedChapterDirs.forEach((dir, index) => {
+                const dirId = directories.indexOf(dir);
+                if (dirId !== -1) {
+                    const option = document.createElement('option');
+                    option.value = dirId;
+                    option.textContent = dir;
+                    dirFilter.appendChild(option);
+                }
             });
-            sortableDirs.forEach(dir => {
-                const option = document.createElement('option');
-                option.value = dir.id;
-                option.textContent = dir.name;
-                dirFilter.appendChild(option);
+            
+            // Dodajemy pozostałe katalogi (nie-rozdziały)
+            directories.forEach((dir, dirId) => {
+                if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
+                    const option = document.createElement('option');
+                    option.value = dirId;
+                    option.textContent = (dir === '' || dir === '.') ? '[Główny katalog]' : dir;
+                    dirFilter.appendChild(option);
+                }
             });
+            
             filterContainer.style.display = 'block';
             viewToggleContainer.style.display = 'flex'; // Pokaż przełącznik widoku
         }
@@ -140,12 +256,16 @@
             paginationContainer.innerHTML = '';
             filterContainer.style.display = 'none';
             viewToggleContainer.style.display = 'none';
+            chapterNavigation.style.display = 'none';
             if (viewToggle) viewToggle.checked = false;
             gallery.classList.remove('comic-view');
             yufFileHandle = null;
             allImages = [];
             filteredImages = [];
             directories = [];
+            sortedChapterDirs = [];
+            currentChapterIndex = 0;
+            chapterNavigationBottom.style.display = 'none';
         }
 
         async function handleFileSelect(event) {
@@ -199,14 +319,65 @@
         }
 
         function applyFilter() {
-            const selectedDirId = parseInt(dirFilter.value, 10);
-            filteredImages = (selectedDirId === -1) 
-                ? allImages 
-                : allImages.filter(img => img.dirId === selectedDirId);
-            
-            currentPage = 1; // Zawsze resetuj do pierwszej strony po zmianie filtra
-            updateDisplay();
+    const selectedDirId = parseInt(dirFilter.value, 10);
+    filteredImages = (selectedDirId === -1) 
+        ? allImages 
+        : allImages.filter(img => img.dirId === selectedDirId);
+    
+    currentPage = 1;
+    
+    // Jeśli jesteśmy w trybie komiksowym i wybrano konkretny katalog
+    if (viewToggle.checked && selectedDirId !== -1) {
+        const selectedDirName = directories[selectedDirId];
+        
+        // Sprawdź czy wybrany katalog jest rozdziałem
+        if (selectedDirName.startsWith('chapter_')) {
+            // Znajdź indeks tego rozdziału w posortowanej liście
+            const chapterIndex = sortedChapterDirs.indexOf(selectedDirName);
+            if (chapterIndex !== -1) {
+                currentChapterIndex = chapterIndex;
+                updateChapterNavigation();
+                renderCurrentChapter();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return; // Nie aktualizuj displayu ponownie
+            }
         }
+    }
+    
+    updateDisplay();
+}
+        
+        
+    function populateFilter() {
+        dirFilter.innerHTML = '<option value="-1">Wszystkie katalogi</option>';
+        
+        // Sortujemy katalogi rozdziałów
+        sortedChapterDirs = sortChapterDirectories(directories);
+        
+        // Dodajemy katalogi rozdziałów w posortowanej kolejności
+        sortedChapterDirs.forEach((dir, index) => {
+            const dirId = directories.indexOf(dir);
+            if (dirId !== -1) {
+                const option = document.createElement('option');
+                option.value = dirId;
+                option.textContent = dir;
+                dirFilter.appendChild(option);
+            }
+    });
+    
+    // Dodajemy pozostałe katalogi (nie-rozdziały)
+    directories.forEach((dir, dirId) => {
+        if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
+            const option = document.createElement('option');
+            option.value = dirId;
+            option.textContent = (dir === '' || dir === '.') ? '[Główny katalog]' : dir;
+            dirFilter.appendChild(option);
+        }
+    });
+    
+    filterContainer.style.display = 'block';
+    viewToggleContainer.style.display = 'flex';
+}
 
         function updateDisplay() {
             const isComicView = viewToggle.checked;
@@ -214,8 +385,19 @@
 
             if (isComicView) {
                 paginationContainer.style.display = 'none';
-                renderAllImagesComic();
+                // Pokaż nawigację rozdziałów tylko jeśli mamy jakieś rozdziały
+                if (sortedChapterDirs.length > 0) {
+    chapterNavigation.style.display = 'flex';
+    chapterNavigationBottom.style.display = 'flex'; // Pokaż też dolną nawigację
+    currentChapterIndex = 0;
+    updateChapterNavigation();
+    renderCurrentChapter();
+}else {
+                    chapterNavigation.style.display = 'none';
+                    renderAllImagesComic();
+                }
             } else {
+                chapterNavigation.style.display = 'none';
                 paginationContainer.style.display = 'flex';
                 const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
                 statusEl.textContent = `Znaleziono ${filteredImages.length} obrazów na ${totalPages} stronach.`;
@@ -223,6 +405,48 @@
                 renderPage(currentPage);
             }
         }
+
+function updateChapterNavigation() {
+    if (sortedChapterDirs.length === 0) return;
+    
+    const currentChapter = sortedChapterDirs[currentChapterIndex];
+    currentChapterEl.textContent = `Rozdział: ${currentChapter.replace('chapter_', '')}`;
+    currentChapterBottomEl.textContent = `Rozdział: ${currentChapter.replace('chapter_', '')}`;
+    
+    // Zaktualizuj selecta aby pokazywał aktualny rozdział
+    const chapterDirId = directories.indexOf(currentChapter);
+    if (chapterDirId !== -1) {
+        dirFilter.value = chapterDirId;
+    }
+    
+    prevChapterBtn.disabled = currentChapterIndex === 0;
+    nextChapterBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
+    prevChapterBottomBtn.disabled = currentChapterIndex === 0;
+    nextChapterBottomBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
+}      
+        function renderCurrentChapter() {
+    if (sortedChapterDirs.length === 0) return;
+    
+    const currentChapterDir = sortedChapterDirs[currentChapterIndex];
+    const chapterDirId = directories.indexOf(currentChapterDir);
+    
+    if (chapterDirId === -1) return;
+    
+    // Użyj filteredImages zamiast ponownego filtrowania
+    filteredImages = allImages.filter(img => img.dirId === chapterDirId);
+    
+    gallery.innerHTML = '';
+    statusEl.textContent = `Rozdział ${currentChapterDir.replace('chapter_', '')}: ${filteredImages.length} obrazów`;
+    
+    filteredImages.forEach(imageInfo => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'gallery-item';
+        const img = document.createElement('img');
+        itemDiv.appendChild(img);
+        gallery.appendChild(itemDiv);
+        loadImage(imageInfo.offset, img);
+    });
+}
 
         function renderAllImagesComic() {
             gallery.innerHTML = '';
@@ -312,12 +536,50 @@
             lightboxImage.src = ""; 
         }
 
+        // Nawigacja między rozdziałami
+        
+       function goToNextChapter() {
+    if (currentChapterIndex < sortedChapterDirs.length - 1) {
+        currentChapterIndex++;
+        updateChapterNavigation();
+        renderCurrentChapter();
+        // Przewiń do góry strony (płynne przewijanie)
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+}
+
+function goToPrevChapter() {
+    if (currentChapterIndex > 0) {
+        currentChapterIndex--;
+        updateChapterNavigation();
+        renderCurrentChapter();
+        // Przewiń do góry strony (płynne przewijanie)
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+} 
+        
+        
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
+
         fileInput.addEventListener('change', handleFileSelect);
         dirFilter.addEventListener('change', applyFilter);
         viewToggle.addEventListener('change', updateDisplay); // Obsługa przełącznika
         closeButton.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', e => (e.target === lightbox) && closeLightbox());
-
+        prevChapterBtn.addEventListener('click', goToPrevChapter);
+        nextChapterBtn.addEventListener('click', goToNextChapter);
+        prevChapterBottomBtn.addEventListener('click', goToPrevChapter);
+        nextChapterBottomBtn.addEventListener('click', goToNextChapter);
     </script>
 </body>
 </html>
