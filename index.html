@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -332,9 +332,9 @@
 
 <body>
     <div class="container">
-        <h1>Galeria Plików Yuffin</h1>
+        <h1>Yuffin File Gallery</h1>
         <div class="top-bar">
-            <label for="fileInput" class="button">Wybierz plik .yuf</label>
+            <label for="fileInput" class="button">Select .yuf file</label>
             <input type="file" id="fileInput" accept=".yuf">
             <div id="filter-container" style="display: none;">
                 <select id="dir-filter"></select>
@@ -344,24 +344,24 @@
                     <input type="checkbox" id="view-toggle">
                     <span class="slider"></span>
                 </label>
-                <span>Widok Komiksowy</span>
+                <span>Comic View</span>
             </div>
         </div>
         <div id="chapter-navigation">
-            <button id="prev-chapter">Poprzedni rozdział</button>
+            <button id="prev-chapter">Previous Chapter</button>
             <span id="current-chapter"></span>
-            <button id="next-chapter">Następny rozdział</button>
+            <button id="next-chapter">Next Chapter</button>
         </div>
-        <p id="status">Wybierz plik, aby rozpocząć.</p>
+        <p id="status">Select a file to begin.</p>
         <div id="gallery"></div>
         <div id="pagination"></div>
         <div id="chapter-navigation-bottom" style="display: none; margin: 20px 0; gap: 15px;">
-            <button id="prev-chapter-bottom">Poprzedni rozdział</button>
+            <button id="prev-chapter-bottom">Previous Chapter</button>
             <span id="current-chapter-bottom"></span>
-            <button id="next-chapter-bottom">Następny rozdział</button>
+            <button id="next-chapter-bottom">Next Chapter</button>
         </div>
     </div>
-    <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Powiększony obraz">
+    <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Enlarged image">
     </div>
 
     <script>
@@ -409,7 +409,7 @@
         }
 
         function populateFilter() {
-            dirFilter.innerHTML = '<option value="-1">Wszystkie katalogi</option>';
+            dirFilter.innerHTML = '<option value="-1">All directories</option>';
             sortedChapterDirs = sortChapterDirectories(directories);
             sortedChapterDirs.forEach((dir, index) => {
                 const dirId = directories.indexOf(dir);
@@ -424,7 +424,7 @@
                 if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
                     const option = document.createElement('option');
                     option.value = dirId;
-                    option.textContent = (dir === '' || dir === '.') ? '[Główny katalog]' : dir;
+                    option.textContent = (dir === '' || dir === '.') ? '[Root Directory]' : dir;
                     dirFilter.appendChild(option);
                 }
             });
@@ -454,16 +454,16 @@
             if (!file) return;
             cleanup();
             yufFileHandle = file;
-            statusEl.textContent = 'Analizowanie pliku...';
+            statusEl.textContent = 'Analyzing file...';
             try {
                 const headerSize = 38;
                 const headerBuffer = await yufFileHandle.slice(0, headerSize).arrayBuffer();
                 const headerView = new DataView(headerBuffer);
                 const decoder = new TextDecoder('utf-8');
-                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("To nie jest prawidłowy plik Yuffin.");
+                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("This is not a valid Yuffin file.");
                 const version = headerView.getFloat32(6, true);
                 if (Math.floor(version) < 3) {
-                    throw new Error(`Niewspierana wersja pliku: ${version.toFixed(1)}. Wymagana jest wersja 3.x.`);
+                    throw new Error(`Unsupported file version: ${version.toFixed(1)}. Version 3.x is required.`);
                 }
                 const imageCount = Number(headerView.getBigUint64(10, true));
                 const dirCount = headerView.getUint32(18, true);
@@ -486,7 +486,7 @@
                 applyFilter();
             } catch (error) {
                 alert(error.message);
-                statusEl.textContent = 'Błąd! Wybierz prawidłowy plik.';
+                statusEl.textContent = 'Error! Please select a valid file.';
                 cleanup();
             }
         }
@@ -514,7 +514,7 @@
         }
 
         function populateFilter() {
-            dirFilter.innerHTML = '<option value="-1">Wszystkie katalogi</option>'
+            dirFilter.innerHTML = '<option value="-1">All directories</option>'
             sortedChapterDirs = sortChapterDirectories(directories);
             sortedChapterDirs.forEach((dir, index) => {
                 const dirId = directories.indexOf(dir);
@@ -529,7 +529,7 @@
                 if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
                     const option = document.createElement('option');
                     option.value = dirId;
-                    option.textContent = (dir === '' || dir === '.') ? '[Główny katalog]' : dir;
+                    option.textContent = (dir === '' || dir === '.') ? '[Root Directory]' : dir;
                     dirFilter.appendChild(option);
                 }
             });
@@ -556,7 +556,7 @@
                 chapterNavigation.style.display = 'none';
                 paginationContainer.style.display = 'flex';
                 const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
-                statusEl.textContent = `Znaleziono ${filteredImages.length} obrazów na ${totalPages} stronach.`;
+                statusEl.textContent = `Found ${filteredImages.length} images on ${totalPages} pages.`;
                 setupPaginationControls(totalPages);
                 renderPage(currentPage);
             }
@@ -565,8 +565,8 @@
         function updateChapterNavigation() {
             if (sortedChapterDirs.length === 0) return;
             const currentChapter = sortedChapterDirs[currentChapterIndex];
-            currentChapterEl.textContent = `Rozdział: ${currentChapter.replace('chapter_', '')}`;
-            currentChapterBottomEl.textContent = `Rozdział: ${currentChapter.replace('chapter_', '')}`;
+            currentChapterEl.textContent = `Chapter: ${currentChapter.replace('chapter_', '')}`;
+            currentChapterBottomEl.textContent = `Chapter: ${currentChapter.replace('chapter_', '')}`;
             const chapterDirId = directories.indexOf(currentChapter);
             if (chapterDirId !== -1) {
                 dirFilter.value = chapterDirId;
@@ -584,7 +584,7 @@
             if (chapterDirId === -1) return;
             filteredImages = allImages.filter(img => img.dirId === chapterDirId);
             gallery.innerHTML = '';
-            statusEl.textContent = `Rozdział ${currentChapterDir.replace('chapter_', '')}: ${filteredImages.length} obrazów`;
+            statusEl.textContent = `Chapter ${currentChapterDir.replace('chapter_', '')}: ${filteredImages.length} images`;
             filteredImages.forEach(imageInfo => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'gallery-item';
@@ -597,7 +597,7 @@
 
         function renderAllImagesComic() {
             gallery.innerHTML = '';
-            statusEl.textContent = `Wyświetlanie ${filteredImages.length} obrazów w widoku komiksowym.`;
+            statusEl.textContent = `Displaying ${filteredImages.length} images in comic view.`;
             filteredImages.forEach(imageInfo => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'gallery-item';
@@ -639,15 +639,15 @@
                 imgElement.addEventListener('click', () => openLightbox(offset));
                 imgElement.onload = () => URL.revokeObjectURL(url);
             } catch (e) {
-                console.error("Błąd podczas ładowania obrazu z offsetu:", offset, e);
-                imgElement.alt = "Błąd ładowania";
+                console.error("Error loading image from offset:", offset, e);
+                imgElement.alt = "Loading error";
             }
         }
 
         function setupPaginationControls(totalPages) {
             paginationContainer.innerHTML = '';
             if (totalPages <= 1) return;
-            paginationContainer.innerHTML = `<button id="first-btn">« Pierwsza</button><button id="prev-btn">‹ Poprzednia</button><span class="page-info">Strona <input type="number" id="page-input" min="1"> z ${totalPages}</span><button id="go-btn">Idź</button><button id="next-btn">Następna ›</button><button id="last-btn">Ostatnia »</button>`;
+            paginationContainer.innerHTML = `<button id="first-btn">« First</button><button id="prev-btn">‹ Previous</button><span class="page-info">Page <input type="number" id="page-input" min="1"> of ${totalPages}</span><button id="go-btn">Go</button><button id="next-btn">Next ›</button><button id="last-btn">Last »</button>`;
             document.getElementById('first-btn').onclick = () => renderPage(1);
             document.getElementById('prev-btn').onclick = () => renderPage(currentPage - 1);
             document.getElementById('next-btn').onclick = () => renderPage(currentPage + 1);
@@ -683,7 +683,7 @@
             lightboxImage.src = "";
         }
 
-        // Nawigacja między rozdziałami
+        // Chapter navigation
         function goToNextChapter() {
             if (currentChapterIndex < sortedChapterDirs.length - 1) {
                 currentChapterIndex++;
@@ -700,7 +700,7 @@
                 window.scrollTo({ top: 0, behavior: 'auto' });
             }
         }
-        // Obsługa zdarzeń
+        // Event handlers
         fileInput.addEventListener('change', handleFileSelect);
         dirFilter.addEventListener('change', applyFilter);
         viewToggle.addEventListener('change', updateDisplay);
