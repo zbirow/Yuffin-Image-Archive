@@ -165,7 +165,7 @@ def unpack_images_v3(pack_file, output_dir, log_callback):
 class YuffinPackerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Yuffin Packer v3.0")
+        self.root.title("Yuffin Image Archive")
         self.root.geometry("600x450")
 
         self.pack_source_dir = tk.StringVar()
@@ -240,3 +240,4 @@ if __name__ == "__main__":
     main_root = tk.Tk()
     app = YuffinPackerApp(main_root)
     main_root.mainloop()
+
