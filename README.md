@@ -7,7 +7,7 @@
 
 **A high-performance, lightweight binary archive for your photo collections, complete with a GUI packer and a serverless web-based gallery viewer.**
 
-This project provides a complete toolkit for efficiently storing and browsing large numbers of images. It uses a custom, highly-optimized binary format (`.yuf`) to pack entire directory structures into a single, portable file.
+This project provides a complete toolkit for efficiently storing and browsing large numbers of images. It uses a custom, highly-optimized binary format (`.yufi`) to pack entire directory structures into a single, portable file.
 
 _The cross-platform GUI Packer tool._
 
@@ -31,11 +31,11 @@ _The feature-rich, serverless [Web Viewer](https://zbirow.github.io/Yuffin-Image
 
 ## ✨ Core Features
 
-*   **Highly Optimized Binary Format:** The custom `.yuf` format is designed for minimal size and extremely fast, on-demand data access.
+*   **Highly Optimized Binary Format:** The custom `.yufi` format is designed for minimal size and extremely fast, on-demand data access.
 *   **Directory Structure Preservation:** Archives maintain the original folder hierarchy, allowing for organized collections.(File names are not preserved. After unpacking, they take the form: image_*)
 *   **Large File Support:** Optimized to handle large archives (up to 4GB) without loading the entire file into memory.
 *   **Cross-Platform GUI Packer:** An easy-to-use tool built with Python and Tkinter to pack and unpack archives. It runs on Windows, macOS, and Linux.
-*   **Serverless Web Viewer:** A single, self-contained HTML file that can open and browse `.yuf` archives directly in your web browser. No backend or server required!
+*   **Serverless Web Viewer:** A single, self-contained HTML file that can open and browse `.yufi` archives directly in your web browser. No backend or server required!
 *   **Advanced Viewer Features:**
     *   **Lazy Loading:** Only images currently on-screen are loaded, ensuring smooth performance even with thousands of photos.
     *   **Directory Filtering:** Instantly filter the gallery by the original folder structure.
@@ -72,10 +72,10 @@ The viewer will automatically:
 ## 🛠️ Components
 
 1.  **The Packer (`Yuffin-Archive.py`)**
-    A Python application with a graphical user interface for creating (`.yuf`) archives from a folder of images and for unpacking them back into their original directory structure.
+    A Python application with a graphical user interface for creating (`.yufi`) archives from a folder of images and for unpacking them back into their original directory structure.
 
 2.  **The Viewer (`index.html`)**
-    A powerful, client-side web application written in pure JavaScript. It can open a local `.yuf` file, parse its structure, and display an interactive, filterable, and paginated gallery.
+    A powerful, client-side web application written in pure JavaScript. It can open a local `.yufi` file, parse its structure, and display an interactive, filterable, and paginated gallery.
 
 ## 🚀 How to Use
 
@@ -85,21 +85,21 @@ The viewer will automatically:
 2.  Run the `Yuffin-Archive.py` file.
 3.  **To Pack:**
     *   Click "Browse..." to select your source folder containing images.
-    *   Click "Save As..." to choose a location and name for your `.yuf` archive.
+    *   Click "Save As..." to choose a location and name for your `.yufi` archive.
     *   Click **PACK**.
 4.  **To Unpack:**
-    *   Click "Browse..." to select an existing `.yuf` archive file.
+    *   Click "Browse..." to select an existing `.yufi` archive file.
     *   Click "Browse..." to choose an empty output folder.
     *   Click **UNPACK**.
 
 ### Viewing an Archive
 
 1.  Open the `index.html` file in any modern web browser (Chrome, Firefox, Edge, Safari).
-2.  Click the "Select .yuf File" button.
-3.  Select your `.yuf` archive file from your computer.
+2.  Click the "Select .yufi File" button.
+3.  Select your `.yufi` archive file from your computer.
 4.  The gallery will load instantly. Use the filter and pagination controls to browse your collection.
 
-## ⚙️ The `.yuf` File Format
+## ⚙️ The `.yufi` File Format
 
 The file format is designed for efficiency and random access.
 
