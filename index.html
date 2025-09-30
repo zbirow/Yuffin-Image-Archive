@@ -334,8 +334,8 @@
     <div class="container">
         <h1>Yuffin File Gallery</h1>
         <div class="top-bar">
-            <label for="fileInput" class="button">Select .yuf file</label>
-            <input type="file" id="fileInput" accept=".yuf">
+            <label for="fileInput" class="button">Select .yufi file</label>
+            <input type="file" id="fileInput" accept=".yufi">
             <div id="filter-container" style="display: none;">
                 <select id="dir-filter"></select>
             </div>
@@ -386,7 +386,7 @@
         const nextChapterBottomBtn = document.getElementById('next-chapter-bottom');
         const currentChapterBottomEl = document.getElementById('current-chapter-bottom');
 
-        let yufFileHandle = null;
+        let yufiFileHandle = null;
         let allImages = [];
         let filteredImages = [];
         let directories = [];
@@ -440,7 +440,7 @@
             chapterNavigation.style.display = 'none';
             if (viewToggle) viewToggle.checked = false;
             gallery.classList.remove('comic-view');
-            yufFileHandle = null;
+            yufiFileHandle = null;
             allImages = [];
             filteredImages = [];
             directories = [];
@@ -453,11 +453,11 @@
             const file = event.target.files[0];
             if (!file) return;
             cleanup();
-            yufFileHandle = file;
+            yufiFileHandle = file;
             statusEl.textContent = 'Analyzing file...';
             try {
                 const headerSize = 38;
-                const headerBuffer = await yufFileHandle.slice(0, headerSize).arrayBuffer();
+                const headerBuffer = await yufiFileHandle.slice(0, headerSize).arrayBuffer();
                 const headerView = new DataView(headerBuffer);
                 const decoder = new TextDecoder('utf-8');
                 if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("This is not a valid Yuffin file.");
@@ -469,12 +469,12 @@
                 const dirCount = headerView.getUint32(18, true);
                 const dirTableOffset = Number(headerView.getBigUint64(22, true));
                 const fileIndexOffset = Number(headerView.getBigUint64(30, true));
-                const dirTableBlob = yufFileHandle.slice(dirTableOffset, fileIndexOffset);
+                const dirTableBlob = yufiFileHandle.slice(dirTableOffset, fileIndexOffset);
                 const dirTableText = await dirTableBlob.text();
                 directories = dirTableText.split('\0').slice(0, dirCount);
                 const fileIndexEntrySize = 8;
                 const fileIndexSize = imageCount * fileIndexEntrySize;
-                const fileIndexBuffer = await yufFileHandle.slice(fileIndexOffset, fileIndexOffset + fileIndexSize).arrayBuffer();
+                const fileIndexBuffer = await yufiFileHandle.slice(fileIndexOffset, fileIndexOffset + fileIndexSize).arrayBuffer();
                 const fileIndexView = new DataView(fileIndexBuffer);
                 allImages = Array.from({ length: imageCount }, (_, i) => {
                     const entryOffset = i * fileIndexEntrySize;
@@ -630,9 +630,9 @@
 
         async function loadImage(offset, imgElement) {
             try {
-                const blockHeaderBuffer = await yufFileHandle.slice(offset, offset + 8).arrayBuffer();
+                const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
                 const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
-                const imageBlob = yufFileHandle.slice(offset + 8, offset + 8 + imageSize);
+                const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
                 const url = URL.createObjectURL(imageBlob);
                 imgElement.src = url;
                 imgElement.classList.add('loaded');
@@ -669,9 +669,9 @@
         }
 
         async function openLightbox(offset) {
-            const blockHeaderBuffer = await yufFileHandle.slice(offset, offset + 8).arrayBuffer();
+            const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
             const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
-            const imageBlob = yufFileHandle.slice(offset + 8, offset + 8 + imageSize);
+            const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
             const url = URL.createObjectURL(imageBlob);
             lightboxImage.src = url;
             lightboxImage.onload = () => URL.revokeObjectURL(url);
@@ -713,3 +713,4 @@
     </script>
 </body>
 </html>
+
