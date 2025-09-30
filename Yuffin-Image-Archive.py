@@ -29,7 +29,7 @@ def natural_sort_key(s):
 # --- Core Logic Functions (v3.1) ---
 
 def pack_images_v3(source_dir, output_file, log_callback):
-    """Packs images recursively from a source directory into a single v3 .yuf file."""
+    """Packs images recursively from a source directory into a single v3 .yufi file."""
     try:
         source_path = Path(source_dir).resolve()
         log_callback("Scanning for files and directories...")
@@ -104,7 +104,7 @@ def pack_images_v3(source_dir, output_file, log_callback):
         log_callback(f"\nERROR: {e}")
 
 def unpack_images_v3(pack_file, output_dir, log_callback):
-    """Unpacks images from a v3 .yuf file, recreating directory structure."""
+    """Unpacks images from a v3 .yufi file, recreating directory structure."""
     try:
         output_path = Path(output_dir)
         
@@ -209,11 +209,11 @@ class YuffinPackerApp:
         if dir_path: self.pack_source_dir.set(dir_path)
 
     def select_pack_dest(self):
-        file_path = filedialog.asksaveasfilename(title="Save Archive As", defaultextension=".yuf", filetypes=[("Yuffin Archive", "*.yuf")])
+        file_path = filedialog.asksaveasfilename(title="Save Archive As", defaultextension=".yufi", filetypes=[("Yuffin Archive", "*.yufi")])
         if file_path: self.pack_output_file.set(file_path)
 
     def select_unpack_source(self):
-        file_path = filedialog.askopenfilename(title="Select Archive File", filetypes=[("Yuffin Archive", "*.yuf")])
+        file_path = filedialog.askopenfilename(title="Select Archive File", filetypes=[("Yuffin Archive", "*.yufi")])
         if file_path: self.unpack_source_file.set(file_path)
 
     def select_unpack_dest(self):
@@ -240,4 +240,5 @@ if __name__ == "__main__":
     main_root = tk.Tk()
     app = YuffinPackerApp(main_root)
     main_root.mainloop()
+
 
