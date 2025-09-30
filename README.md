@@ -71,7 +71,7 @@ The viewer will automatically:
 
 ## 🛠️ Components
 
-1.  **The Packer (`Yuffin-Archive.py`)**
+1.  **The Packer (`Yuffin-Image-Archive.py`)**
     A Python application with a graphical user interface for creating (`.yufi`) archives from a folder of images and for unpacking them back into their original directory structure.
 
 2.  **The Viewer (`index.html`)**
@@ -82,7 +82,7 @@ The viewer will automatically:
 ### Packing & Unpacking Images
 
 1.  Make sure you have Python installed on your system.
-2.  Run the `Yuffin-Archive.py` file.
+2.  Run the `Yuffin-Image-Archive.py` file.
 3.  **To Pack:**
     *   Click "Browse..." to select your source folder containing images.
     *   Click "Save As..." to choose a location and name for your `.yufi` archive.
