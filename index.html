@@ -396,17 +396,18 @@
         let currentPage = 1;
 
         function sortChapterDirectories(dirs) {
-            const chapterDirs = dirs.filter(dir => dir.startsWith('chapter_'));
-            const dirsWithNumbers = chapterDirs.map(dir => {
-                const chapterNum = parseFloat(dir.replace('chapter_', ''));
-                return {
-                    original: dir,
-                    numericValue: isNaN(chapterNum) ? 0 : chapterNum
-                };
-            });
-            dirsWithNumbers.sort((a, b) => a.numericValue - b.numericValue);
-            return dirsWithNumbers.map(dir => dir.original);
-        }
+          const prefixRegex = /^chapter_/i;
+          const chapterDirs = dirs.filter(dir => prefixRegex.test(dir));
+          const dirsWithNumbers = chapterDirs.map(dir => {
+          const chapterNum = parseFloat(dir.replace(prefixRegex, ''));
+        return {
+            original: dir,
+            numericValue: isNaN(chapterNum) ? 0 : chapterNum
+        };
+        });
+        dirsWithNumbers.sort((a, b) => a.numericValue - b.numericValue);
+        return dirsWithNumbers.map(dir => dir.original);
+       }
 
         function populateFilter() {
             dirFilter.innerHTML = '<option value="-1">All directories</option>';
@@ -713,4 +714,5 @@
     </script>
 </body>
 </html>
+
 
