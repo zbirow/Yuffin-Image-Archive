@@ -67,7 +67,21 @@ The viewer will automatically:
 
  * Provide seamless navigation between chapters in comic book view
 
+## 🌟 Multi-Packing
 
+Easily pack multiple subdirectories into individual `.yufi` files.
+
+### Description
+This tool simplifies the creation of `.yufi` archives.
+Simply select a root directory, and the script will automatically process all subdirectories within it.
+The contents of each folder are packed into a standalone `.yufi` file, named after the original subdirectory.
+
+```
+Root_Directory/
+├── Image/      -> converts to -> Image.yufi
+├── Image2/     -> converts to -> Image2.yufi
+└── Image3/     -> converts to -> Image3.yufi
+```
 
 ## 🛠️ Components
 
