@@ -380,10 +380,10 @@
     const prevChapterBtn = document.getElementById('prev-chapter');
     const nextChapterBtn = document.getElementById('next-chapter');
     const currentChapterEl = document.getElementById('current-chapter');
-    const chapterNavigationBotvolume = document.getElementById('chapter-navigation-botvolume');
-    const prevChapterBotvolumeBtn = document.getElementById('prev-chapter-botvolume');
-    const nextChapterBotvolumeBtn = document.getElementById('next-chapter-botvolume');
-    const currentChapterBotvolumeEl = document.getElementById('current-chapter-botvolume');
+    const chapterNavigationBottom = document.getElementById('chapter-navigation-bottom');
+    const prevChapterBottomBtn = document.getElementById('prev-chapter-bottom');
+    const nextChapterBottomBtn = document.getElementById('next-chapter-bottom');
+    const currentChapterBottomEl = document.getElementById('current-chapter-bottom');
 
     let yufiFileHandle = null;
     let allImages = [];
@@ -394,19 +394,30 @@
     const IMAGES_PER_PAGE = 36;
     let currentPage = 1;
 
-    // Funkcja do wyodrębnienia numerów z nazwy rozdziału
+    // Funkcja do wyodrębnienia numerów z nazwy rozdziału (ignoruje wielkość liter)
     function extractChapterInfo(chapterName) {
         const lowerChapter = chapterName.toLowerCase();
-        const match = lowerChapter.match(/(?:volume_)?(\d+)_chapter_(\d+)/i);
         
-        if (match) {
-            const hasVolumePrefix = lowerChapter.includes('volume_');
+        // Sprawdź format z tomem: Tom_X_Chapter_Y
+        const tomMatch = lowerChapter.match(/tom_(\d+)_chapter_(\d+)/i);
+        if (tomMatch) {
             return {
-                volume: hasVolumePrefix ? parseInt(match[1]) : null,
-                chapter: parseInt(match[2]),
+                tom: parseInt(tomMatch[1]),
+                chapter: parseInt(tomMatch[2]),
                 originalName: chapterName
             };
         }
+        
+        // Sprawdź format bez tomu: Chapter_X
+        const chapterMatch = lowerChapter.match(/^chapter_(\d+)/i);
+        if (chapterMatch) {
+            return {
+                tom: 0, // Dla sortowania, rozdziały bez tomu traktujemy jako tom 0
+                chapter: parseInt(chapterMatch[1]),
+                originalName: chapterName
+            };
+        }
+        
         return null;
     }
 
@@ -415,18 +426,18 @@
         const info = extractChapterInfo(chapterName);
         if (!info) return chapterName;
         
-        if (info.volume !== null) {
-            return `Volume ${info.volume}, Rozdział ${info.chapter}`;
+        if (info.tom > 0) {
+            return `Tom ${info.tom}, Rozdział ${info.chapter}`;
         } else {
             return `Rozdział ${info.chapter}`;
         }
     }
 
     function sortChapterDirectories(dirs) {
-        // Filtruj foldery, które są rozdziałami
+        // Filtruj foldery, które są rozdziałami (ignorując wielkość liter)
         const chapterDirs = dirs.filter(dir => {
             const lowerDir = dir.toLowerCase();
-            return /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDir);
+            return /(?:tom_\d+_)?chapter_\d+/i.test(lowerDir);
         });
         
         // Sortuj foldery rozdziałów
@@ -434,16 +445,15 @@
             const info = extractChapterInfo(dir);
             return {
                 original: dir,
-                volume: info ? info.volume : 0,
-                chapter: info ? info.chapter : 0,
-                hasVolume: info ? info.volume !== null : false
+                tom: info ? info.tom : 0,
+                chapter: info ? info.chapter : 0
             };
         });
         
-        // Sortuj najpierw według volumeu, potem według rozdziału
+        // Sortuj najpierw według tomu, potem według rozdziału
         dirsWithNumbers.sort((a, b) => {
-            if (a.volume !== b.volume) {
-                return a.volume - b.volume;
+            if (a.tom !== b.tom) {
+                return a.tom - b.tom;
             }
             return a.chapter - b.chapter;
         });
@@ -466,10 +476,10 @@
             }
         });
         
-        // Dodaj pozostałe foldery
+        // Dodaj pozostałe foldery (nie-rozdziały)
         directories.forEach((dir, dirId) => {
             const lowerDir = dir.toLowerCase();
-            const isChapterDir = /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDir);
+            const isChapterDir = /(?:tom_\d+_)?chapter_\d+/i.test(lowerDir);
             if (!isChapterDir) {
                 const option = document.createElement('option');
                 option.value = dirId;
@@ -496,7 +506,7 @@
         directories = [];
         sortedChapterDirs = [];
         currentChapterIndex = 0;
-        chapterNavigationBotvolume.style.display = 'none';
+        chapterNavigationBottom.style.display = 'none';
     }
 
     async function handleFileSelect(event) {
@@ -547,12 +557,15 @@
             ? allImages
             : allImages.filter(img => img.dirId === selectedDirId);
         currentPage = 1;
+        
+        // Jeśli włączamy Comic View, znajdź aktualny katalog w sortedChapterDirs
         if (viewToggle.checked && selectedDirId !== -1) {
             const selectedDirName = directories[selectedDirId];
             const lowerDirName = selectedDirName.toLowerCase();
-            const isChapterDir = /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDirName);
+            const isChapterDir = /(?:tom_\d+_)?chapter_\d+/i.test(lowerDirName);
             
             if (isChapterDir) {
+                // Znajdź indeks w sortedChapterDirs dla aktualnego katalogu
                 const chapterIndex = sortedChapterDirs.findIndex(dir => 
                     dir.toLowerCase() === selectedDirName.toLowerCase()
                 );
@@ -571,22 +584,48 @@
     function updateDisplay() {
         const isComicView = viewToggle.checked;
         gallery.classList.toggle('comic-view', isComicView);
+        
         if (isComicView) {
             paginationContainer.style.display = 'none';
-            if (sortedChapterDirs.length > 0) {
+            
+            // Sprawdź czy mamy wybrany katalog rozdziału
+            const selectedDirId = parseInt(dirFilter.value, 10);
+            const selectedDirName = selectedDirId !== -1 ? directories[selectedDirId] : null;
+            const lowerDirName = selectedDirName ? selectedDirName.toLowerCase() : '';
+            const isChapterDir = selectedDirName && /(?:tom_\d+_)?chapter_\d+/i.test(lowerDirName);
+            
+            if (isChapterDir && sortedChapterDirs.length > 0) {
+                // Znajdź indeks aktualnego katalogu w sortedChapterDirs
+                const chapterIndex = sortedChapterDirs.findIndex(dir => 
+                    dir.toLowerCase() === selectedDirName.toLowerCase()
+                );
+                
+                if (chapterIndex !== -1) {
+                    currentChapterIndex = chapterIndex;
+                } else {
+                    currentChapterIndex = 0;
+                }
+                
                 chapterNavigation.style.display = 'flex';
-                chapterNavigationBotvolume.style.display = 'flex';
+                chapterNavigationBottom.style.display = 'flex';
+                updateChapterNavigation();
+                renderCurrentChapter();
+            } else if (sortedChapterDirs.length > 0) {
+                // Jeśli nie mamy wybranego rozdziału, ale są rozdziały, pokaż pierwszy
                 currentChapterIndex = 0;
+                chapterNavigation.style.display = 'flex';
+                chapterNavigationBottom.style.display = 'flex';
                 updateChapterNavigation();
                 renderCurrentChapter();
             } else {
+                // Brak rozdziałów, pokaż wszystkie obrazy
                 chapterNavigation.style.display = 'none';
-                chapterNavigationBotvolume.style.display = 'none';
+                chapterNavigationBottom.style.display = 'none';
                 renderAllImagesComic();
             }
         } else {
             chapterNavigation.style.display = 'none';
-            chapterNavigationBotvolume.style.display = 'none';
+            chapterNavigationBottom.style.display = 'none';
             paginationContainer.style.display = 'flex';
             const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
             statusEl.textContent = `Found ${filteredImages.length} images on ${totalPages} pages.`;
@@ -602,7 +641,7 @@
         // Używaj sformatowanej nazwy do wyświetlania
         const displayName = formatChapterForDisplay(currentChapter);
         currentChapterEl.textContent = `Chapter: ${displayName}`;
-        currentChapterBotvolumeEl.textContent = `Chapter: ${displayName}`;
+        currentChapterBottomEl.textContent = `Chapter: ${displayName}`;
         
         // Znajdź indeks folderu (ignorując wielkość liter)
         const chapterDirId = directories.findIndex(dir => 
@@ -615,8 +654,8 @@
         
         prevChapterBtn.disabled = currentChapterIndex === 0;
         nextChapterBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
-        prevChapterBotvolumeBtn.disabled = currentChapterIndex === 0;
-        nextChapterBotvolumeBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
+        prevChapterBottomBtn.disabled = currentChapterIndex === 0;
+        nextChapterBottomBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
     }
 
     function renderCurrentChapter() {
@@ -761,11 +800,12 @@
     lightbox.addEventListener('click', e => (e.target === lightbox) && closeLightbox());
     prevChapterBtn.addEventListener('click', goToPrevChapter);
     nextChapterBtn.addEventListener('click', goToNextChapter);
-    prevChapterBotvolumeBtn.addEventListener('click', goToPrevChapter);
-    nextChapterBotvolumeBtn.addEventListener('click', goToNextChapter);
+    prevChapterBottomBtn.addEventListener('click', goToPrevChapter);
+    nextChapterBottomBtn.addEventListener('click', goToNextChapter);
 </script>
 </body>
 </html>
+
 
 
 
