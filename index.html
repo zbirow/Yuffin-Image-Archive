@@ -34,7 +34,7 @@
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-botvolume: 20px;
         }
 
         label.button {
@@ -89,7 +89,7 @@
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
+            botvolume: 0;
             background-color: #4b5263;
             transition: .4s;
             border-radius: 34px;
@@ -101,7 +101,7 @@
             height: 26px;
             width: 26px;
             left: 4px;
-            bottom: 4px;
+            botvolume: 4px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
@@ -212,7 +212,7 @@
             padding: 0 15px;
         }
 
-        #chapter-navigation-bottom {
+        #chapter-navigation-botvolume {
             display: none;
             margin: 20px 0;
             gap: 15px;
@@ -220,7 +220,7 @@
             justify-content: center;
         }
 
-        #chapter-navigation-bottom button {
+        #chapter-navigation-botvolume button {
             background-color: var(--accent-color);
             color: var(--bg-color);
             border: none;
@@ -231,17 +231,17 @@
             transition: background-color 0.2s;
         }
 
-        #chapter-navigation-bottom button:hover {
+        #chapter-navigation-botvolume button:hover {
             background-color: var(--accent-hover);
         }
 
-        #chapter-navigation-bottom button:disabled {
+        #chapter-navigation-botvolume button:disabled {
             background-color: #4b5263;
             cursor: not-allowed;
             opacity: 0.5;
         }
 
-        #current-chapter-bottom {
+        #current-chapter-botvolume {
             font-size: 18px;
             font-weight: bold;
             padding: 0 15px;
@@ -355,364 +355,417 @@
         <p id="status">Select a file to begin.</p>
         <div id="gallery"></div>
         <div id="pagination"></div>
-        <div id="chapter-navigation-bottom" style="display: none; margin: 20px 0; gap: 15px;">
-            <button id="prev-chapter-bottom">Previous Chapter</button>
-            <span id="current-chapter-bottom"></span>
-            <button id="next-chapter-bottom">Next Chapter</button>
+        <div id="chapter-navigation-botvolume" style="display: none; margin: 20px 0; gap: 15px;">
+            <button id="prev-chapter-botvolume">Previous Chapter</button>
+            <span id="current-chapter-botvolume"></span>
+            <button id="next-chapter-botvolume">Next Chapter</button>
         </div>
     </div>
     <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Enlarged image">
     </div>
-
     <script>
-        const MAGIC_HEADER_STR = 'Yuffin';
-        const fileInput = document.getElementById('fileInput');
-        const gallery = document.getElementById('gallery');
-        const statusEl = document.getElementById('status');
-        const paginationContainer = document.getElementById('pagination');
-        const filterContainer = document.getElementById('filter-container');
-        const dirFilter = document.getElementById('dir-filter');
-        const viewToggleContainer = document.getElementById('view-toggle-container');
-        const viewToggle = document.getElementById('view-toggle');
-        const lightbox = document.getElementById('lightbox');
-        const closeButton = document.getElementById('close-button');
-        const lightboxImage = document.getElementById('lightbox-image');
-        const chapterNavigation = document.getElementById('chapter-navigation');
-        const prevChapterBtn = document.getElementById('prev-chapter');
-        const nextChapterBtn = document.getElementById('next-chapter');
-        const currentChapterEl = document.getElementById('current-chapter');
-        const chapterNavigationBottom = document.getElementById('chapter-navigation-bottom');
-        const prevChapterBottomBtn = document.getElementById('prev-chapter-bottom');
-        const nextChapterBottomBtn = document.getElementById('next-chapter-bottom');
-        const currentChapterBottomEl = document.getElementById('current-chapter-bottom');
+    const MAGIC_HEADER_STR = 'Yuffin';
+    const fileInput = document.getElementById('fileInput');
+    const gallery = document.getElementById('gallery');
+    const statusEl = document.getElementById('status');
+    const paginationContainer = document.getElementById('pagination');
+    const filterContainer = document.getElementById('filter-container');
+    const dirFilter = document.getElementById('dir-filter');
+    const viewToggleContainer = document.getElementById('view-toggle-container');
+    const viewToggle = document.getElementById('view-toggle');
+    const lightbox = document.getElementById('lightbox');
+    const closeButton = document.getElementById('close-button');
+    const lightboxImage = document.getElementById('lightbox-image');
+    const chapterNavigation = document.getElementById('chapter-navigation');
+    const prevChapterBtn = document.getElementById('prev-chapter');
+    const nextChapterBtn = document.getElementById('next-chapter');
+    const currentChapterEl = document.getElementById('current-chapter');
+    const chapterNavigationBotvolume = document.getElementById('chapter-navigation-botvolume');
+    const prevChapterBotvolumeBtn = document.getElementById('prev-chapter-botvolume');
+    const nextChapterBotvolumeBtn = document.getElementById('next-chapter-botvolume');
+    const currentChapterBotvolumeEl = document.getElementById('current-chapter-botvolume');
 
-        let yufiFileHandle = null;
-        let allImages = [];
-        let filteredImages = [];
-        let directories = [];
-        let sortedChapterDirs = [];
-        let currentChapterIndex = 0;
-        const IMAGES_PER_PAGE = 36;
-        let currentPage = 1;
+    let yufiFileHandle = null;
+    let allImages = [];
+    let filteredImages = [];
+    let directories = [];
+    let sortedChapterDirs = [];
+    let currentChapterIndex = 0;
+    const IMAGES_PER_PAGE = 36;
+    let currentPage = 1;
 
-        function sortChapterDirectories(dirs) {
-          const prefixRegex = /^chapter_/i;
-          const chapterDirs = dirs.filter(dir => prefixRegex.test(dir));
-          const dirsWithNumbers = chapterDirs.map(dir => {
-          const chapterNum = parseFloat(dir.replace(prefixRegex, ''));
-        return {
-            original: dir,
-            numericValue: isNaN(chapterNum) ? 0 : chapterNum
-        };
+    // Funkcja do wyodrębnienia numerów z nazwy rozdziału
+    function extractChapterInfo(chapterName) {
+        const lowerChapter = chapterName.toLowerCase();
+        const match = lowerChapter.match(/(?:volume_)?(\d+)_chapter_(\d+)/i);
+        
+        if (match) {
+            const hasVolumePrefix = lowerChapter.includes('volume_');
+            return {
+                volume: hasVolumePrefix ? parseInt(match[1]) : null,
+                chapter: parseInt(match[2]),
+                originalName: chapterName
+            };
+        }
+        return null;
+    }
+
+    // Funkcja do formatowania nazwy rozdziału do wyświetlenia
+    function formatChapterForDisplay(chapterName) {
+        const info = extractChapterInfo(chapterName);
+        if (!info) return chapterName;
+        
+        if (info.volume !== null) {
+            return `Volume ${info.volume}, Rozdział ${info.chapter}`;
+        } else {
+            return `Rozdział ${info.chapter}`;
+        }
+    }
+
+    function sortChapterDirectories(dirs) {
+        // Filtruj foldery, które są rozdziałami
+        const chapterDirs = dirs.filter(dir => {
+            const lowerDir = dir.toLowerCase();
+            return /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDir);
         });
-        dirsWithNumbers.sort((a, b) => a.numericValue - b.numericValue);
+        
+        // Sortuj foldery rozdziałów
+        const dirsWithNumbers = chapterDirs.map(dir => {
+            const info = extractChapterInfo(dir);
+            return {
+                original: dir,
+                volume: info ? info.volume : 0,
+                chapter: info ? info.chapter : 0,
+                hasVolume: info ? info.volume !== null : false
+            };
+        });
+        
+        // Sortuj najpierw według volumeu, potem według rozdziału
+        dirsWithNumbers.sort((a, b) => {
+            if (a.volume !== b.volume) {
+                return a.volume - b.volume;
+            }
+            return a.chapter - b.chapter;
+        });
+        
         return dirsWithNumbers.map(dir => dir.original);
-       }
+    }
 
-        function populateFilter() {
-            dirFilter.innerHTML = '<option value="-1">All directories</option>';
-            sortedChapterDirs = sortChapterDirectories(directories);
-            sortedChapterDirs.forEach((dir, index) => {
-                const dirId = directories.indexOf(dir);
-                if (dirId !== -1) {
-                    const option = document.createElement('option');
-                    option.value = dirId;
-                    option.textContent = dir;
-                    dirFilter.appendChild(option);
-                }
+    function populateFilter() {
+        dirFilter.innerHTML = '<option value="-1">All directories</option>';
+        sortedChapterDirs = sortChapterDirectories(directories);
+        
+        // Dodaj foldery rozdziałów
+        sortedChapterDirs.forEach((dir) => {
+            const dirId = directories.findIndex(d => d.toLowerCase() === dir.toLowerCase());
+            if (dirId !== -1) {
+                const option = document.createElement('option');
+                option.value = dirId;
+                option.textContent = dir;
+                dirFilter.appendChild(option);
+            }
+        });
+        
+        // Dodaj pozostałe foldery
+        directories.forEach((dir, dirId) => {
+            const lowerDir = dir.toLowerCase();
+            const isChapterDir = /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDir);
+            if (!isChapterDir) {
+                const option = document.createElement('option');
+                option.value = dirId;
+                option.textContent = (dir === '' || dir === '.') ? '[Root Directory]' : dir;
+                dirFilter.appendChild(option);
+            }
+        });
+        
+        filterContainer.style.display = 'block';
+        viewToggleContainer.style.display = 'flex';
+    }
+
+    function cleanup() {
+        gallery.innerHTML = '';
+        paginationContainer.innerHTML = '';
+        filterContainer.style.display = 'none';
+        viewToggleContainer.style.display = 'none';
+        chapterNavigation.style.display = 'none';
+        if (viewToggle) viewToggle.checked = false;
+        gallery.classList.remove('comic-view');
+        yufiFileHandle = null;
+        allImages = [];
+        filteredImages = [];
+        directories = [];
+        sortedChapterDirs = [];
+        currentChapterIndex = 0;
+        chapterNavigationBotvolume.style.display = 'none';
+    }
+
+    async function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        cleanup();
+        yufiFileHandle = file;
+        statusEl.textContent = 'Analyzing file...';
+        try {
+            const headerSize = 38;
+            const headerBuffer = await yufiFileHandle.slice(0, headerSize).arrayBuffer();
+            const headerView = new DataView(headerBuffer);
+            const decoder = new TextDecoder('utf-8');
+            if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("This is not a valid Yuffin file.");
+            const version = headerView.getFloat32(6, true);
+            if (Math.floor(version) < 3) {
+                throw new Error(`Unsupported file version: ${version.toFixed(1)}. Version 3.x is required.`);
+            }
+            const imageCount = Number(headerView.getBigUint64(10, true));
+            const dirCount = headerView.getUint32(18, true);
+            const dirTableOffset = Number(headerView.getBigUint64(22, true));
+            const fileIndexOffset = Number(headerView.getBigUint64(30, true));
+            const dirTableBlob = yufiFileHandle.slice(dirTableOffset, fileIndexOffset);
+            const dirTableText = await dirTableBlob.text();
+            directories = dirTableText.split('\0').slice(0, dirCount);
+            const fileIndexEntrySize = 8;
+            const fileIndexSize = imageCount * fileIndexEntrySize;
+            const fileIndexBuffer = await yufiFileHandle.slice(fileIndexOffset, fileIndexOffset + fileIndexSize).arrayBuffer();
+            const fileIndexView = new DataView(fileIndexBuffer);
+            allImages = Array.from({ length: imageCount }, (_, i) => {
+                const entryOffset = i * fileIndexEntrySize;
+                const offset = fileIndexView.getUint32(entryOffset, true);
+                const dirId = fileIndexView.getUint16(entryOffset + 4, true);
+                return { offset, dirId };
             });
-            directories.forEach((dir, dirId) => {
-                if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
-                    const option = document.createElement('option');
-                    option.value = dirId;
-                    option.textContent = (dir === '' || dir === '.') ? '[Root Directory]' : dir;
-                    dirFilter.appendChild(option);
-                }
-            });
-            filterContainer.style.display = 'block';
-            viewToggleContainer.style.display = 'flex';
-        }
-
-        function cleanup() {
-            gallery.innerHTML = '';
-            paginationContainer.innerHTML = '';
-            filterContainer.style.display = 'none';
-            viewToggleContainer.style.display = 'none';
-            chapterNavigation.style.display = 'none';
-            if (viewToggle) viewToggle.checked = false;
-            gallery.classList.remove('comic-view');
-            yufiFileHandle = null;
-            allImages = [];
-            filteredImages = [];
-            directories = [];
-            sortedChapterDirs = [];
-            currentChapterIndex = 0;
-            chapterNavigationBottom.style.display = 'none';
-        }
-
-        async function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            populateFilter();
+            applyFilter();
+        } catch (error) {
+            alert(error.message);
+            statusEl.textContent = 'Error! Please select a valid file.';
             cleanup();
-            yufiFileHandle = file;
-            statusEl.textContent = 'Analyzing file...';
-            try {
-                const headerSize = 38;
-                const headerBuffer = await yufiFileHandle.slice(0, headerSize).arrayBuffer();
-                const headerView = new DataView(headerBuffer);
-                const decoder = new TextDecoder('utf-8');
-                if (decoder.decode(headerBuffer.slice(0, 6)) !== MAGIC_HEADER_STR) throw new Error("This is not a valid Yuffin file.");
-                const version = headerView.getFloat32(6, true);
-                if (Math.floor(version) < 3) {
-                    throw new Error(`Unsupported file version: ${version.toFixed(1)}. Version 3.x is required.`);
-                }
-                const imageCount = Number(headerView.getBigUint64(10, true));
-                const dirCount = headerView.getUint32(18, true);
-                const dirTableOffset = Number(headerView.getBigUint64(22, true));
-                const fileIndexOffset = Number(headerView.getBigUint64(30, true));
-                const dirTableBlob = yufiFileHandle.slice(dirTableOffset, fileIndexOffset);
-                const dirTableText = await dirTableBlob.text();
-                directories = dirTableText.split('\0').slice(0, dirCount);
-                const fileIndexEntrySize = 8;
-                const fileIndexSize = imageCount * fileIndexEntrySize;
-                const fileIndexBuffer = await yufiFileHandle.slice(fileIndexOffset, fileIndexOffset + fileIndexSize).arrayBuffer();
-                const fileIndexView = new DataView(fileIndexBuffer);
-                allImages = Array.from({ length: imageCount }, (_, i) => {
-                    const entryOffset = i * fileIndexEntrySize;
-                    const offset = fileIndexView.getUint32(entryOffset, true);
-                    const dirId = fileIndexView.getUint16(entryOffset + 4, true);
-                    return { offset, dirId };
-                });
-                populateFilter();
-                applyFilter();
-            } catch (error) {
-                alert(error.message);
-                statusEl.textContent = 'Error! Please select a valid file.';
-                cleanup();
-            }
         }
+    }
 
-        function applyFilter() {
-            const selectedDirId = parseInt(dirFilter.value, 10);
-            filteredImages = (selectedDirId === -1)
-                ? allImages
-                : allImages.filter(img => img.dirId === selectedDirId);
-            currentPage = 1;
-            if (viewToggle.checked && selectedDirId !== -1) {
-                const selectedDirName = directories[selectedDirId];
-                if (selectedDirName.startsWith('chapter_')) {
-                    const chapterIndex = sortedChapterDirs.indexOf(selectedDirName);
-                    if (chapterIndex !== -1) {
-                        currentChapterIndex = chapterIndex;
-                        updateChapterNavigation();
-                        renderCurrentChapter();
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                        return;
-                    }
-                }
-            }
-            updateDisplay();
-        }
-
-        function populateFilter() {
-            dirFilter.innerHTML = '<option value="-1">All directories</option>'
-            sortedChapterDirs = sortChapterDirectories(directories);
-            sortedChapterDirs.forEach((dir, index) => {
-                const dirId = directories.indexOf(dir);
-                if (dirId !== -1) {
-                    const option = document.createElement('option');
-                    option.value = dirId;
-                    option.textContent = dir;
-                    dirFilter.appendChild(option);
-                }
-            });
-            directories.forEach((dir, dirId) => {
-                if (!dir.startsWith('chapter_') && !sortedChapterDirs.includes(dir)) {
-                    const option = document.createElement('option');
-                    option.value = dirId;
-                    option.textContent = (dir === '' || dir === '.') ? '[Root Directory]' : dir;
-                    dirFilter.appendChild(option);
-                }
-            });
-            filterContainer.style.display = 'block';
-            viewToggleContainer.style.display = 'flex';
-        }
-
-        function updateDisplay() {
-            const isComicView = viewToggle.checked;
-            gallery.classList.toggle('comic-view', isComicView);
-            if (isComicView) {
-                paginationContainer.style.display = 'none';
-                if (sortedChapterDirs.length > 0) {
-                    chapterNavigation.style.display = 'flex';
-                    chapterNavigationBottom.style.display = 'flex';
-                    currentChapterIndex = 0;
+    function applyFilter() {
+        const selectedDirId = parseInt(dirFilter.value, 10);
+        filteredImages = (selectedDirId === -1)
+            ? allImages
+            : allImages.filter(img => img.dirId === selectedDirId);
+        currentPage = 1;
+        if (viewToggle.checked && selectedDirId !== -1) {
+            const selectedDirName = directories[selectedDirId];
+            const lowerDirName = selectedDirName.toLowerCase();
+            const isChapterDir = /(?:^|volume_)\d+_chapter_\d+/i.test(lowerDirName);
+            
+            if (isChapterDir) {
+                const chapterIndex = sortedChapterDirs.findIndex(dir => 
+                    dir.toLowerCase() === selectedDirName.toLowerCase()
+                );
+                if (chapterIndex !== -1) {
+                    currentChapterIndex = chapterIndex;
                     updateChapterNavigation();
                     renderCurrentChapter();
-                } else {
-                    chapterNavigation.style.display = 'none';
-                    renderAllImagesComic();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
                 }
+            }
+        }
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        const isComicView = viewToggle.checked;
+        gallery.classList.toggle('comic-view', isComicView);
+        if (isComicView) {
+            paginationContainer.style.display = 'none';
+            if (sortedChapterDirs.length > 0) {
+                chapterNavigation.style.display = 'flex';
+                chapterNavigationBotvolume.style.display = 'flex';
+                currentChapterIndex = 0;
+                updateChapterNavigation();
+                renderCurrentChapter();
             } else {
                 chapterNavigation.style.display = 'none';
-                paginationContainer.style.display = 'flex';
-                const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
-                statusEl.textContent = `Found ${filteredImages.length} images on ${totalPages} pages.`;
-                setupPaginationControls(totalPages);
-                renderPage(currentPage);
+                chapterNavigationBotvolume.style.display = 'none';
+                renderAllImagesComic();
             }
-        }
-
-        function updateChapterNavigation() {
-            if (sortedChapterDirs.length === 0) return;
-            const currentChapter = sortedChapterDirs[currentChapterIndex];
-            currentChapterEl.textContent = `Chapter: ${currentChapter.replace('chapter_', '')}`;
-            currentChapterBottomEl.textContent = `Chapter: ${currentChapter.replace('chapter_', '')}`;
-            const chapterDirId = directories.indexOf(currentChapter);
-            if (chapterDirId !== -1) {
-                dirFilter.value = chapterDirId;
-            }
-            prevChapterBtn.disabled = currentChapterIndex === 0;
-            nextChapterBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
-            prevChapterBottomBtn.disabled = currentChapterIndex === 0;
-            nextChapterBottomBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
-        }
-
-        function renderCurrentChapter() {
-            if (sortedChapterDirs.length === 0) return;
-            const currentChapterDir = sortedChapterDirs[currentChapterIndex];
-            const chapterDirId = directories.indexOf(currentChapterDir);
-            if (chapterDirId === -1) return;
-            filteredImages = allImages.filter(img => img.dirId === chapterDirId);
-            gallery.innerHTML = '';
-            statusEl.textContent = `Chapter ${currentChapterDir.replace('chapter_', '')}: ${filteredImages.length} images`;
-            filteredImages.forEach(imageInfo => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'gallery-item';
-                const img = document.createElement('img');
-                itemDiv.appendChild(img);
-                gallery.appendChild(itemDiv);
-                loadImage(imageInfo.offset, img);
-            });
-        }
-
-        function renderAllImagesComic() {
-            gallery.innerHTML = '';
-            statusEl.textContent = `Displaying ${filteredImages.length} images in comic view.`;
-            filteredImages.forEach(imageInfo => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'gallery-item';
-                const img = document.createElement('img');
-                itemDiv.appendChild(img);
-                gallery.appendChild(itemDiv);
-                loadImage(imageInfo.offset, img);
-            });
-        }
-
-        function renderPage(pageNumber) {
+        } else {
+            chapterNavigation.style.display = 'none';
+            chapterNavigationBotvolume.style.display = 'none';
+            paginationContainer.style.display = 'flex';
             const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
-            if (pageNumber < 1 || pageNumber > totalPages) return;
-            currentPage = pageNumber;
-            gallery.innerHTML = '';
-            updatePaginationControls(totalPages);
-            const startIndex = (pageNumber - 1) * IMAGES_PER_PAGE;
-            const endIndex = Math.min(startIndex + IMAGES_PER_PAGE, filteredImages.length);
-
-            for (let i = startIndex; i < endIndex; i++) {
-                const imageInfo = filteredImages[i];
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'gallery-item';
-                const img = document.createElement('img');
-                itemDiv.appendChild(img);
-                gallery.appendChild(itemDiv);
-                loadImage(imageInfo.offset, img);
-            }
+            statusEl.textContent = `Found ${filteredImages.length} images on ${totalPages} pages.`;
+            setupPaginationControls(totalPages);
+            renderPage(currentPage);
         }
+    }
 
-        async function loadImage(offset, imgElement) {
-            try {
-                const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
-                const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
-                const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
-                const url = URL.createObjectURL(imageBlob);
-                imgElement.src = url;
-                imgElement.classList.add('loaded');
-                imgElement.addEventListener('click', () => openLightbox(offset));
-                imgElement.onload = () => URL.revokeObjectURL(url);
-            } catch (e) {
-                console.error("Error loading image from offset:", offset, e);
-                imgElement.alt = "Loading error";
-            }
+    function updateChapterNavigation() {
+        if (sortedChapterDirs.length === 0) return;
+        const currentChapter = sortedChapterDirs[currentChapterIndex];
+        
+        // Używaj sformatowanej nazwy do wyświetlania
+        const displayName = formatChapterForDisplay(currentChapter);
+        currentChapterEl.textContent = `Chapter: ${displayName}`;
+        currentChapterBotvolumeEl.textContent = `Chapter: ${displayName}`;
+        
+        // Znajdź indeks folderu (ignorując wielkość liter)
+        const chapterDirId = directories.findIndex(dir => 
+            dir.toLowerCase() === currentChapter.toLowerCase()
+        );
+        
+        if (chapterDirId !== -1) {
+            dirFilter.value = chapterDirId;
         }
+        
+        prevChapterBtn.disabled = currentChapterIndex === 0;
+        nextChapterBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
+        prevChapterBotvolumeBtn.disabled = currentChapterIndex === 0;
+        nextChapterBotvolumeBtn.disabled = currentChapterIndex === sortedChapterDirs.length - 1;
+    }
 
-        function setupPaginationControls(totalPages) {
-            paginationContainer.innerHTML = '';
-            if (totalPages <= 1) return;
-            paginationContainer.innerHTML = `<button id="first-btn">« First</button><button id="prev-btn">‹ Previous</button><span class="page-info">Page <input type="number" id="page-input" min="1"> of ${totalPages}</span><button id="go-btn">Go</button><button id="next-btn">Next ›</button><button id="last-btn">Last »</button>`;
-            document.getElementById('first-btn').onclick = () => renderPage(1);
-            document.getElementById('prev-btn').onclick = () => renderPage(currentPage - 1);
-            document.getElementById('next-btn').onclick = () => renderPage(currentPage + 1);
-            document.getElementById('last-btn').onclick = () => renderPage(totalPages);
-            const pageInput = document.getElementById('page-input');
-            const goBtn = document.getElementById('go-btn');
-            goBtn.onclick = () => { const page = parseInt(pageInput.value, 10); if (page >= 1 && page <= totalPages) renderPage(page); };
-            pageInput.addEventListener('keydown', e => e.key === 'Enter' && goBtn.click());
+    function renderCurrentChapter() {
+        if (sortedChapterDirs.length === 0) return;
+        const currentChapterDir = sortedChapterDirs[currentChapterIndex];
+        
+        // Znajdź indeks folderu (ignorując wielkość liter)
+        const chapterDirId = directories.findIndex(dir => 
+            dir.toLowerCase() === currentChapterDir.toLowerCase()
+        );
+        
+        if (chapterDirId === -1) return;
+        
+        filteredImages = allImages.filter(img => img.dirId === chapterDirId);
+        gallery.innerHTML = '';
+        
+        const displayName = formatChapterForDisplay(currentChapterDir);
+        statusEl.textContent = `${displayName}: ${filteredImages.length} images`;
+        
+        filteredImages.forEach(imageInfo => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'gallery-item';
+            const img = document.createElement('img');
+            itemDiv.appendChild(img);
+            gallery.appendChild(itemDiv);
+            loadImage(imageInfo.offset, img);
+        });
+    }
+
+    function renderAllImagesComic() {
+        gallery.innerHTML = '';
+        statusEl.textContent = `Displaying ${filteredImages.length} images in comic view.`;
+        filteredImages.forEach(imageInfo => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'gallery-item';
+            const img = document.createElement('img');
+            itemDiv.appendChild(img);
+            gallery.appendChild(itemDiv);
+            loadImage(imageInfo.offset, img);
+        });
+    }
+
+    function renderPage(pageNumber) {
+        const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE) || 1;
+        if (pageNumber < 1 || pageNumber > totalPages) return;
+        currentPage = pageNumber;
+        gallery.innerHTML = '';
+        updatePaginationControls(totalPages);
+        const startIndex = (pageNumber - 1) * IMAGES_PER_PAGE;
+        const endIndex = Math.min(startIndex + IMAGES_PER_PAGE, filteredImages.length);
+
+        for (let i = startIndex; i < endIndex; i++) {
+            const imageInfo = filteredImages[i];
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'gallery-item';
+            const img = document.createElement('img');
+            itemDiv.appendChild(img);
+            gallery.appendChild(itemDiv);
+            loadImage(imageInfo.offset, img);
         }
+    }
 
-        function updatePaginationControls(totalPages) {
-            if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
-            document.getElementById('first-btn').disabled = currentPage === 1;
-            document.getElementById('prev-btn').disabled = currentPage === 1;
-            document.getElementById('next-btn').disabled = currentPage === totalPages;
-            document.getElementById('last-btn').disabled = currentPage === totalPages;
-            document.getElementById('page-input').value = currentPage;
-            document.getElementById('page-input').max = totalPages;
-        }
-
-        async function openLightbox(offset) {
+    async function loadImage(offset, imgElement) {
+        try {
             const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
             const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
             const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
             const url = URL.createObjectURL(imageBlob);
-            lightboxImage.src = url;
-            lightboxImage.onload = () => URL.revokeObjectURL(url);
-            lightbox.classList.add('visible');
+            imgElement.src = url;
+            imgElement.classList.add('loaded');
+            imgElement.addEventListener('click', () => openLightbox(offset));
+            imgElement.onload = () => URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Error loading image from offset:", offset, e);
+            imgElement.alt = "Loading error";
         }
+    }
 
-        function closeLightbox() {
-            lightbox.classList.remove('visible');
-            lightboxImage.src = "";
-        }
+    function setupPaginationControls(totalPages) {
+        paginationContainer.innerHTML = '';
+        if (totalPages <= 1) return;
+        paginationContainer.innerHTML = `<button id="first-btn">« First</button><button id="prev-btn">‹ Previous</button><span class="page-info">Page <input type="number" id="page-input" min="1"> of ${totalPages}</span><button id="go-btn">Go</button><button id="next-btn">Next ›</button><button id="last-btn">Last »</button>`;
+        document.getElementById('first-btn').onclick = () => renderPage(1);
+        document.getElementById('prev-btn').onclick = () => renderPage(currentPage - 1);
+        document.getElementById('next-btn').onclick = () => renderPage(currentPage + 1);
+        document.getElementById('last-btn').onclick = () => renderPage(totalPages);
+        const pageInput = document.getElementById('page-input');
+        const goBtn = document.getElementById('go-btn');
+        goBtn.onclick = () => { const page = parseInt(pageInput.value, 10); if (page >= 1 && page <= totalPages) renderPage(page); };
+        pageInput.addEventListener('keydown', e => e.key === 'Enter' && goBtn.click());
+    }
 
-        // Chapter navigation
-        function goToNextChapter() {
-            if (currentChapterIndex < sortedChapterDirs.length - 1) {
-                currentChapterIndex++;
-                updateChapterNavigation();
-                renderCurrentChapter();
-                window.scrollTo({ top: 0, behavior: 'auto' });
-            }
+    function updatePaginationControls(totalPages) {
+        if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
+        document.getElementById('first-btn').disabled = currentPage === 1;
+        document.getElementById('prev-btn').disabled = currentPage === 1;
+        document.getElementById('next-btn').disabled = currentPage === totalPages;
+        document.getElementById('last-btn').disabled = currentPage === totalPages;
+        document.getElementById('page-input').value = currentPage;
+        document.getElementById('page-input').max = totalPages;
+    }
+
+    async function openLightbox(offset) {
+        const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
+        const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
+        const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
+        const url = URL.createObjectURL(imageBlob);
+        lightboxImage.src = url;
+        lightboxImage.onload = () => URL.revokeObjectURL(url);
+        lightbox.classList.add('visible');
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('visible');
+        lightboxImage.src = "";
+    }
+
+    // Chapter navigation
+    function goToNextChapter() {
+        if (currentChapterIndex < sortedChapterDirs.length - 1) {
+            currentChapterIndex++;
+            updateChapterNavigation();
+            renderCurrentChapter();
+            window.scrollTo({ top: 0, behavior: 'auto' });
         }
-        function goToPrevChapter() {
-            if (currentChapterIndex > 0) {
-                currentChapterIndex--;
-                updateChapterNavigation();
-                renderCurrentChapter();
-                window.scrollTo({ top: 0, behavior: 'auto' });
-            }
+    }
+    
+    function goToPrevChapter() {
+        if (currentChapterIndex > 0) {
+            currentChapterIndex--;
+            updateChapterNavigation();
+            renderCurrentChapter();
+            window.scrollTo({ top: 0, behavior: 'auto' });
         }
-        // Event handlers
-        fileInput.addEventListener('change', handleFileSelect);
-        dirFilter.addEventListener('change', applyFilter);
-        viewToggle.addEventListener('change', updateDisplay);
-        closeButton.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', e => (e.target === lightbox) && closeLightbox());
-        prevChapterBtn.addEventListener('click', goToPrevChapter);
-        nextChapterBtn.addEventListener('click', goToNextChapter);
-        prevChapterBottomBtn.addEventListener('click', goToPrevChapter);
-        nextChapterBottomBtn.addEventListener('click', goToNextChapter);
-    </script>
+    }
+    
+    // Event handlers
+    fileInput.addEventListener('change', handleFileSelect);
+    dirFilter.addEventListener('change', applyFilter);
+    viewToggle.addEventListener('change', updateDisplay);
+    closeButton.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => (e.target === lightbox) && closeLightbox());
+    prevChapterBtn.addEventListener('click', goToPrevChapter);
+    nextChapterBtn.addEventListener('click', goToNextChapter);
+    prevChapterBotvolumeBtn.addEventListener('click', goToPrevChapter);
+    nextChapterBotvolumeBtn.addEventListener('click', goToNextChapter);
+</script>
 </body>
 </html>
+
 
 
