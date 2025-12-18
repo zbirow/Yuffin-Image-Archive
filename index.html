@@ -34,7 +34,7 @@
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
-            margin-botvolume: 20px;
+            margin-bottom: 20px; /* Naprawiono typo botvolume -> bottom */
         }
 
         label.button {
@@ -89,7 +89,7 @@
             top: 0;
             left: 0;
             right: 0;
-            botvolume: 0;
+            bottom: 0; /* Naprawiono typo botvolume -> bottom */
             background-color: #4b5263;
             transition: .4s;
             border-radius: 34px;
@@ -101,7 +101,7 @@
             height: 26px;
             width: 26px;
             left: 4px;
-            botvolume: 4px;
+            bottom: 4px; /* Naprawiono typo botvolume -> bottom */
             background-color: white;
             transition: .4s;
             border-radius: 50%;
@@ -212,7 +212,8 @@
             padding: 0 15px;
         }
 
-        #chapter-navigation-botvolume {
+        /* Naprawiono ID w CSS: botvolume -> bottom */
+        #chapter-navigation-bottom {
             display: none;
             margin: 20px 0;
             gap: 15px;
@@ -220,7 +221,7 @@
             justify-content: center;
         }
 
-        #chapter-navigation-botvolume button {
+        #chapter-navigation-bottom button {
             background-color: var(--accent-color);
             color: var(--bg-color);
             border: none;
@@ -231,17 +232,17 @@
             transition: background-color 0.2s;
         }
 
-        #chapter-navigation-botvolume button:hover {
+        #chapter-navigation-bottom button:hover {
             background-color: var(--accent-hover);
         }
 
-        #chapter-navigation-botvolume button:disabled {
+        #chapter-navigation-bottom button:disabled {
             background-color: #4b5263;
             cursor: not-allowed;
             opacity: 0.5;
         }
 
-        #current-chapter-botvolume {
+        #current-chapter-bottom {
             font-size: 18px;
             font-weight: bold;
             padding: 0 15px;
@@ -355,10 +356,12 @@
         <p id="status">Select a file to begin.</p>
         <div id="gallery"></div>
         <div id="pagination"></div>
-        <div id="chapter-navigation-botvolume" style="display: none; margin: 20px 0; gap: 15px;">
-            <button id="prev-chapter-botvolume">Previous Chapter</button>
-            <span id="current-chapter-botvolume"></span>
-            <button id="next-chapter-botvolume">Next Chapter</button>
+        
+        <!-- Naprawiono ID w HTML: botvolume -> bottom, aby zgadzały się z JS -->
+        <div id="chapter-navigation-bottom" style="display: none; margin: 20px 0; gap: 15px;">
+            <button id="prev-chapter-bottom">Previous Chapter</button>
+            <span id="current-chapter-bottom"></span>
+            <button id="next-chapter-bottom">Next Chapter</button>
         </div>
     </div>
     <div id="lightbox"><span id="close-button">&times;</span><img id="lightbox-image" src="" alt="Enlarged image">
@@ -376,10 +379,14 @@
     const lightbox = document.getElementById('lightbox');
     const closeButton = document.getElementById('close-button');
     const lightboxImage = document.getElementById('lightbox-image');
+    
+    // Górna nawigacja
     const chapterNavigation = document.getElementById('chapter-navigation');
     const prevChapterBtn = document.getElementById('prev-chapter');
     const nextChapterBtn = document.getElementById('next-chapter');
     const currentChapterEl = document.getElementById('current-chapter');
+    
+    // Dolna nawigacja (teraz ID się zgadzają z HTML)
     const chapterNavigationBottom = document.getElementById('chapter-navigation-bottom');
     const prevChapterBottomBtn = document.getElementById('prev-chapter-bottom');
     const nextChapterBottomBtn = document.getElementById('next-chapter-bottom');
@@ -546,6 +553,7 @@
             applyFilter();
         } catch (error) {
             alert(error.message);
+            console.error(error);
             statusEl.textContent = 'Error! Please select a valid file.';
             cleanup();
         }
@@ -759,13 +767,17 @@
     }
 
     async function openLightbox(offset) {
-        const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
-        const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
-        const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
-        const url = URL.createObjectURL(imageBlob);
-        lightboxImage.src = url;
-        lightboxImage.onload = () => URL.revokeObjectURL(url);
-        lightbox.classList.add('visible');
+        try {
+            const blockHeaderBuffer = await yufiFileHandle.slice(offset, offset + 8).arrayBuffer();
+            const imageSize = new DataView(blockHeaderBuffer).getUint32(4, true);
+            const imageBlob = yufiFileHandle.slice(offset + 8, offset + 8 + imageSize);
+            const url = URL.createObjectURL(imageBlob);
+            lightboxImage.src = url;
+            lightboxImage.onload = () => URL.revokeObjectURL(url);
+            lightbox.classList.add('visible');
+        } catch (e) {
+            console.error("Error opening lightbox:", e);
+        }
     }
 
     function closeLightbox() {
@@ -805,7 +817,3 @@
 </script>
 </body>
 </html>
-
-
-
-
